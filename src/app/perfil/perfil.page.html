@@ -1,0 +1,176 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/dashboard" text="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mi Perfil</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div class="profile-container">
+    @if (authService.currentUser(); as user) {
+      <!-- Encabezado con Avatar -->
+      <div class="avatar-section">
+        <div class="avatar-circle">
+          <ion-icon name="person-outline"></ion-icon>
+        </div>
+        <h2 class="profile-name">{{ user.name }}</h2>
+        @if (user.username) {
+          <p class="profile-username">&#64;{{ user.username }}</p>
+        }
+        <span class="profile-badge">Usuario Activo</span>
+      </div>
+
+      <!-- Tarjeta con información del usuario -->
+      <ion-card class="info-card">
+        <ion-list lines="inset">
+          <ion-item>
+            <ion-icon name="person-outline" color="primary" slot="start"></ion-icon>
+            <ion-label>
+              <h3>Nombre</h3>
+              <p>{{ user.name }}</p>
+            </ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-icon name="at-outline" color="primary" slot="start"></ion-icon>
+            <ion-label>
+              <h3>Usuario</h3>
+              <p>{{ user.username || 'No registrado' }}</p>
+            </ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-icon name="mail-outline" color="primary" slot="start"></ion-icon>
+            <ion-label>
+              <h3>Correo Electrónico</h3>
+              <p>{{ user.email }}</p>
+            </ion-label>
+          </ion-item>
+
+          <ion-item>
+            <ion-icon name="call-outline" color="primary" slot="start"></ion-icon>
+            <ion-label>
+              <h3>Teléfono</h3>
+              <p>+52 {{ user.telefono || 'No registrado' }}</p>
+            </ion-label>
+          </ion-item>
+          
+        </ion-list>
+      </ion-card>
+
+      <!-- Botones de Acción -->
+      <div class="actions-section">
+        <ion-button expand="block" color="primary" (click)="openEditModal()" [disabled]="isDeleting">
+          <ion-icon slot="start" name="create-outline"></ion-icon>
+          Editar Datos
+        </ion-button>
+
+        <!-- Zona de Peligro: Eliminar Cuenta -->
+        <div class="danger-zone">
+          <p class="danger-title">Zona de Cuenta</p>
+          <ion-button expand="block" color="danger" fill="outline" (click)="confirmDeleteAccount()" [disabled]="isDeleting">
+            @if (isDeleting) {
+              <ion-spinner slot="start" name="crescent"></ion-spinner>
+              Eliminando cuenta...
+            } @else {
+              <ion-icon slot="start" name="trash-outline"></ion-icon>
+              Eliminar Cuenta
+            }
+          </ion-button>
+        </div>
+      </div>
+    } @else {
+      <div class="ion-text-center ion-padding" style="margin-top: 50px;">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p style="color: var(--ion-color-medium); margin-top: 10px;">Cargando información del perfil...</p>
+      </div>
+    }
+  </div>
+
+  <!-- Modal para Editar Perfil -->
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Editar Datos</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeEditModal()">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <div class="modal-form">
+          <ion-item class="form-item" lines="none">
+            <ion-label position="stacked">Nombre Completo</ion-label>
+            <ion-input
+              type="text"
+              [(ngModel)]="editData.name"
+              placeholder="Ingresa tu nombre completo"
+              required>
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none">
+            <ion-label position="stacked">Nombre de Usuario</ion-label>
+            <ion-input
+              type="text"
+              [(ngModel)]="editData.username"
+              placeholder="Nombre de usuario único"
+              required>
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none">
+            <ion-label position="stacked">Correo Electrónico</ion-label>
+            <ion-input
+              type="email"
+              [(ngModel)]="editData.email"
+              placeholder="correo@ejemplo.com"
+              required>
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none">
+            <ion-label position="stacked">Teléfono</ion-label>
+            <ion-input
+              type="tel"
+              [(ngModel)]="editData.telefono"
+              placeholder="Tu número telefónico"
+              required>
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none">
+            <ion-label position="stacked">Nueva Contraseña (Opcional)</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="editData.password"
+              placeholder="Dejar en blanco para conservar actual">
+            </ion-input>
+          </ion-item>
+
+          <div class="modal-actions">
+            <ion-button expand="block" color="primary" (click)="saveProfile()" [disabled]="isSaving">
+              @if (isSaving) {
+                <ion-spinner slot="start" name="crescent"></ion-spinner>
+                Guardando cambios...
+              } @else {
+                <ion-icon slot="start" name="save-outline"></ion-icon>
+                Guardar Cambios
+              }
+            </ion-button>
+
+            <ion-button expand="block" fill="clear" color="medium" (click)="closeEditModal()" [disabled]="isSaving">
+              Cancelar
+            </ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

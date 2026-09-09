@@ -1,0 +1,79 @@
+<ion-content [fullscreen]="true">
+  <!-- El ngClass controlará las animaciones CSS -->
+  <div class="auth-container" [ngClass]="{'show-signup': isSignup}">
+    
+    <div id="back">
+      <!-- Agregamos un #canvasEl para referenciarlo en TypeScript -->
+      <canvas #canvasEl id="canvas" class="canvas-back"></canvas>
+      <div class="backRight"></div>
+      <div class="backLeft"></div>
+    </div>
+
+    <div id="slideBox">
+      <div class="topLayer">
+        <!-- Panel Izquierdo: Sign Up -->
+        <div class="left">
+          <div class="content">
+            <h2>Sign Up</h2>
+            <form id="form-signup" (submit)="onRegisterSubmit($event)">
+              <div class="form-element form-stack">
+                <label for="name-signup" class="form-label">Nombre</label>
+                <input id="name-signup" type="text" name="name" [(ngModel)]="registerData.name" required placeholder="Tu nombre completo">
+              </div>
+              <div class="form-element form-stack">
+                <label for="username-signup" class="form-label">Usuario</label>
+                <input id="username-signup" type="text" name="username" [(ngModel)]="registerData.username" required placeholder="Nombre de usuario">
+              </div>
+              <div class="form-element form-stack">
+                <label for="email-signup" class="form-label">Email</label>
+                <input id="email-signup" type="email" name="email" [(ngModel)]="registerData.email" required placeholder="correo@ejemplo.com">
+              </div>
+              <div class="form-element form-stack">
+                <label for="telefono-signup" class="form-label">Teléfono</label>
+                <input id="telefono-signup" type="tel" name="telefono" [(ngModel)]="registerData.telefono" required placeholder="Tu teléfono">
+              </div>
+              <div class="form-element form-stack">
+                <label for="password-signup" class="form-label">Password</label>
+                <input class="text-black" id="password-signup" type="password" name="password" [(ngModel)]="registerData.password" required placeholder="••••••••">
+              </div>
+              <div class="form-element form-checkbox">
+                <input id="confirm-terms" type="checkbox" name="terms" [(ngModel)]="registerData.terms" class="checkbox">
+                <label for="confirm-terms">Acepto los <a href="#" (click)="$event.preventDefault()">Términos de Servicio</a></label>
+              </div>
+              <div class="form-element form-submit">
+                <button id="signUp" class="signup" type="submit" name="signup" [disabled]="isLoading">
+                  {{ isLoading ? 'Registrando...' : 'Sign up' }} 
+                </button>
+                <button type="button" id="goLeft" class="signup off" (click)="toggleView(false)" [disabled]="isLoading">Log In</button> 
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Panel Derecho: Login -->
+        <div class="right">
+          <div class="content">
+            <h2>Login</h2>
+            <form id="form-login" (submit)="onLoginSubmit($event)">
+              <div class="form-element form-stack">
+                <label for="email-login" class="form-label">Email o Usuario</label>
+                <input id="email-login" type="text" name="email" [(ngModel)]="loginData.email" required placeholder="correo@ejemplo.com o usuario">
+              </div>
+              <div class="form-element form-stack">
+                <label for="password-login" class="form-label">Password</label>
+                <input class="text-black" id="password-login" type="password" name="password" [(ngModel)]="loginData.password" required placeholder="••••••••">
+              </div>
+              <div class="form-element form-submit">
+                <button id="logIn" class="login" type="submit" name="login" [disabled]="isLoading">
+                  {{ isLoading ? 'Ingresando...' : 'Log In' }}
+                </button>
+                <button type="button" id="goRight" class="login off" name="signup" (click)="toggleView(true)" [disabled]="isLoading">Sign Up</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

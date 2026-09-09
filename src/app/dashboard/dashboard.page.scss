@@ -1,0 +1,24 @@
+/* Estilos específicos de Dashboard Diario */
+.dashboard-card {
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 20px;
+}
+
+.dashboard-card:hover, .dashboard-card:active {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.dashboard-card ion-card-title {
+  font-weight: 700;
+  font-size: 1.4rem;
+}
+
+.dashboard-card ion-card-content {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--ion-color-medium);
+  margin-top: 8px;
+}

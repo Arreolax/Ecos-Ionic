@@ -1,0 +1,65 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Ecos</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/tabs/tab2" title="Ir a Álbum">
+        <ion-icon slot="icon-only" name="images-outline"></ion-icon>
+      </ion-button>
+      <ion-button routerLink="/tabs/perfil" title="Ir a Perfil">
+        <ion-icon slot="icon-only" name="person-circle-outline"></ion-icon>
+      </ion-button>
+      @if (authService.currentUser()) {
+        <ion-button (click)="logout()" color="danger" title="Cerrar Sesión">
+          <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+        </ion-button>
+      }
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Ecos</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="ion-padding ion-text-center">
+    @if (authService.currentUser(); as user) {
+      <div style="margin-bottom: 30px;">
+        <h1 style="font-weight: bold; color: var(--ion-color-primary);">¡Hola, {{ user.name }}! 👋</h1>
+        <p style="color: var(--ion-color-medium); font-size: 1.1rem;">Bienvenido a Ecos.</p>
+      </div>
+    }
+
+    <ion-grid>
+      <ion-row class="ion-justify-content-center">
+        <!-- Tarjeta del Álbum Fotográfico -->
+        <ion-col size="12" size-md="6" size-lg="5">
+          <ion-card routerLink="/tabs/tab2" button="true" class="dashboard-card">
+            <ion-card-header>
+              <ion-icon name="camera-outline" color="primary" style="font-size: 4rem;"></ion-icon>
+              <ion-card-title style="margin-top: 10px;">Capturar Recuerdos</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              Entra a tu álbum privado para tomar fotografías, documentar tu día y gestionar tus memorias visuales.
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+
+        <!-- Tarjeta del Perfil -->
+        <ion-col size="12" size-md="6" size-lg="5">
+          <ion-card routerLink="/tabs/perfil" button="true" class="dashboard-card">
+            <ion-card-header>
+              <ion-icon name="person-outline" color="secondary" style="font-size: 4rem;"></ion-icon>
+              <ion-card-title style="margin-top: 10px;">Mi Perfil</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              Revisa la información de tu cuenta, ajusta tus preferencias y administra tu espacio personal.
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
+</ion-content>
