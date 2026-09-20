@@ -1,0 +1,72 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/dashboard" title="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mi Álbum</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/tabs/camera" title="Capturar Nueva Foto">
+        <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Mi Álbum</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Pull to Refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Indicador de Carga -->
+  @if (photoService.isLoading()) {
+    <div class="loading-container ion-text-center ion-padding">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Cargando tus fotografías...</p>
+    </div>
+  } @else if (photoService.photos().length === 0) {
+    <!-- Estado Vacío -->
+    <div class="empty-state ion-text-center ion-padding">
+      <ion-icon name="images-outline"></ion-icon>
+      <h3>Tu álbum está vacío</h3>
+      <p>Aún no tienes recuerdos guardados en el servidor.</p>
+      <ion-button (click)="goToCamera()" color="primary" class="ion-margin-top" shape="round">
+        <ion-icon slot="start" name="camera"></ion-icon>
+        Tomar primera foto
+      </ion-button>
+    </div>
+  } @else {
+    <!-- Cuadrícula de Fotografías -->
+    <ion-grid class="photos-grid">
+      <ion-row>
+        @for (photo of photoService.photos(); track (photo.id ?? photo.file_name ?? $index); let position = $index) {
+          <ion-col size="6" size-md="4" size-lg="3">
+            <div class="photo-card" (click)="showActionSheet(photo, position)">
+              <div class="image-wrapper">
+                <img [src]="photo.webviewPath" [alt]="photo.title || ('Foto ' + (position + 1))" loading="lazy" />
+              </div>
+              @if (photo.title) {
+                <div class="photo-info">
+                  <span class="photo-title">{{ photo.title }}</span>
+                </div>
+              }
+            </div>
+          </ion-col>
+        }
+      </ion-row>
+    </ion-grid>
+  }
+
+  <!-- Botón Flotante para ir a la Cámara -->
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-fab-button (click)="goToCamera()" color="primary">
+      <ion-icon name="camera"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

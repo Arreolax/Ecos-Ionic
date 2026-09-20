@@ -1,0 +1,94 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/album" text="Álbum"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Capturar Foto</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding camera-content">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Capturar Foto</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="camera-container">
+    @if (!previewUrl()) {
+      <!-- Modo Espera: Sin foto tomada aún -->
+      <div class="trigger-box ion-text-center">
+        <div class="icon-circle">
+          <ion-icon name="camera-outline"></ion-icon>
+        </div>
+        <h2>Captura un Recuerdo</h2>
+        <p class="subtitle">
+          Toma una fotografía al instante o selecciona una desde tu galería para guardarla en tu diario personal.
+        </p>
+
+        <div class="action-buttons">
+          <ion-button (click)="openCamera()" expand="block" shape="round" color="primary" class="main-btn">
+            <ion-icon slot="start" name="camera"></ion-icon>
+            Abrir Cámara
+          </ion-button>
+
+          <ion-button (click)="openGallery()" expand="block" shape="round" fill="outline" color="primary" class="secondary-btn">
+            <ion-icon slot="start" name="image-outline"></ion-icon>
+            Elegir de la Galería
+          </ion-button>
+        </div>
+      </div>
+    } @else {
+      <!-- Modo Previsualización y Guardado -->
+      <div class="preview-section">
+        <div class="image-preview-card">
+          <img [src]="previewUrl()" alt="Previsualización" />
+          <ion-button (click)="discardPhoto()" fill="clear" color="light" class="discard-btn" title="Descartar">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+
+        <ion-card class="form-card">
+          <ion-card-header>
+            <ion-card-title>Detalles del Recuerdo</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item lines="inset" class="form-item">
+              <ion-input
+                label="Título *"
+                labelPlacement="stacked"
+                placeholder="Ej. Tarde en el parque (Obligatorio)"
+                [(ngModel)]="title"
+                required="true"
+              ></ion-input>
+            </ion-item>
+
+            <ion-item lines="inset" class="form-item ion-margin-top">
+              <ion-textarea
+                label="Descripción / Nota *"
+                labelPlacement="stacked"
+                placeholder="Escribe lo que significó este momento... (Obligatorio)"
+                [autoGrow]="true"
+                rows="3"
+                [(ngModel)]="description"
+                required="true"
+              ></ion-textarea>
+            </ion-item>
+
+            <div class="save-actions ion-margin-top">
+              <ion-button (click)="saveToAlbum()" expand="block" shape="round" color="success">
+                <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>
+                Guardar en mi Álbum
+              </ion-button>
+
+              <ion-button (click)="openCamera()" expand="block" shape="round" fill="outline" color="medium">
+                <ion-icon slot="start" name="refresh-outline"></ion-icon>
+                Tomar otra foto
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    }
+  </div>
+</ion-content>

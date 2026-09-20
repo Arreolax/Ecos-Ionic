@@ -23,8 +23,22 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'album',
+    redirectTo: 'tabs/album',
+    pathMatch: 'full',
+  },
+  {
+    path: 'camera',
+    redirectTo: 'tabs/camera',
+    pathMatch: 'full',
+  },
+  {
     path: 'perfil',
     redirectTo: 'tabs/perfil',
     pathMatch: 'full',
+  },
+  {
+    path: 'notes',
+    loadComponent: () => import('./notes/notes.page').then( m => m.NotesPage)
   },
 ];

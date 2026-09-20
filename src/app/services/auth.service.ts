@@ -21,10 +21,10 @@ export interface AuthResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private loginUrl = 'http://localhost/p1-u1/login.php';
-  private registerUrl = 'http://localhost/p1-u1/register.php';
-  private updateProfileUrl = 'http://localhost/p1-u1/update_user.php';
-  private deleteAccountUrl = 'http://localhost/p1-u1/delete_user.php';
+  private loginUrl = 'http://localhost/ecos-ionic/login.php';
+  private registerUrl = 'http://localhost/ecos-ionic/register.php';
+  private updateProfileUrl = 'http://localhost/ecos-ionic/update_user.php';
+  private deleteAccountUrl = 'http://localhost/ecos-ionic/delete_user.php';
 
   public currentUser = signal<User | null>(null);
   private initialLoadPromise: Promise<void>;

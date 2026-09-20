@@ -1,154 +1,289 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, effect } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Photo } from '@capacitor/camera';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Preferences } from '@capacitor/preferences';
+import { Filesystem } from '@capacitor/filesystem';
 import { Platform } from '@ionic/angular';
-import { Capacitor } from '@capacitor/core';
+import axios from 'axios';
+import { AuthService } from './auth.service';
+
+export interface UserPhoto {
+  id?: number | string;
+  user_id?: number | string;
+  file_name?: string;
+  file_path?: string;
+  title?: string | null;
+  description?: string | null;
+  created_at?: string;
+  filepath: string;
+  webviewPath?: string;
+}
+
+export interface PhotoUploadResponse {
+  success: boolean;
+  message: string;
+  url?: string;
+}
+
+export interface PhotoDeleteResponse {
+  success: boolean;
+  message: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class PhotoService {
-  public photos = signal<UserPhoto[]>([]);
-
-  private PHOTO_STORAGE: string = 'photos';
-
   private platform = inject(Platform);
+  private authService = inject(AuthService);
 
-  /* Use the device camera to take a photo:
-  // https://capacitor.ionicframework.com/docs/apis/camera
+  private baseUrl = 'http://localhost/ecos-ionic/';
+  private uploadUrl = 'http://localhost/ecos-ionic/upload_photo.php';
+  private getPhotosUrl = 'http://localhost/ecos-ionic/get_photos.php';
+  private deletePhotoUrl = 'http://localhost/ecos-ionic/delete_photo.php';
 
-  // Store the photo data into permanent file storage:
-  // https://capacitor.ionicframework.com/docs/apis/filesystem
+  public photos = signal<UserPhoto[]>([]);
+  public isLoading = signal<boolean>(false);
 
-  // Store a reference to all photo filepaths using Storage API:
-  // https://capacitor.ionicframework.com/docs/apis/storage
-  */
-  public async addNewToGallery() {
-    // Take a photo
-    const capturedPhoto = await Camera.getPhoto({
-      resultType: CameraResultType.Uri, // file-based data; provides best performance
-      source: CameraSource.Camera, // automatically take a new photo with the camera
-      quality: 100, // highest quality (0 to 100)
-    });
-
-    const savedImageFile = await this.savePicture(capturedPhoto);
-
-    // Add new photo to the front of the Photos signal
-    this.photos.update((photos) => [savedImageFile, ...photos]);
-
-    // Cache all photo data for future retrieval
-    Preferences.set({
-      key: this.PHOTO_STORAGE,
-      value: JSON.stringify(this.photos()),
+  constructor() {
+    // Si el usuario cierra sesión, limpiar las fotos en memoria
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (!user) {
+        this.photos.set([]);
+      }
     });
   }
 
-  // Save picture to file on device
-  private async savePicture(photo: Photo) {
-    // Convert photo to base64 format, required by Filesystem API to save
-    let base64Data: string | Blob;
-
-    // "hybrid" will detect Cordova or Capacitor
-    if (this.platform.is('hybrid')) {
-      // Read the file into base64 format
-      const file = await Filesystem.readFile({
-        path: photo.path!,
-      });
-
-      base64Data = file.data;
-    } else {
-      base64Data = await this.base64FromPath(photo.webPath!);
+  /**
+   * Carga las fotos del usuario actual desde la base de datos MySQL (Backend PHP).
+   */
+  public async loadSaved(): Promise<void> {
+    let user = this.authService.currentUser();
+    if (!user) {
+      await this.authService.loadStoredUser();
+      user = this.authService.currentUser();
     }
 
-    // Write the file to the data directory
-    const fileName = Date.now() + '.jpeg';
-    const savedFile = await Filesystem.writeFile({
-      path: fileName,
-      data: base64Data,
-      directory: Directory.Data,
-    });
-
-    if (this.platform.is('hybrid')) {
-      // Display the new image by rewriting the 'file://' path to HTTP
-      // Details: https://ionicframework.com/docs/building/webview#file-protocol
-      return {
-        filepath: savedFile.uri,
-        webviewPath: Capacitor.convertFileSrc(savedFile.uri),
-      };
-    } else {
-      // Use webPath to display the new image instead of base64 since it's
-      // already loaded into memory
-      return {
-        filepath: fileName,
-        webviewPath: photo.webPath,
-      };
+    if (!user || !user.id) {
+      this.photos.set([]);
+      return;
     }
-  }
 
-  private async base64FromPath(path: string): Promise<string> {
-    const response = await fetch(path);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => {
-        if (typeof reader.result === 'string') {
-          resolve(reader.result);
-        } else {
-          reject('method did not return a string');
-        }
-      };
-      reader.readAsDataURL(blob);
-    });
-  }
+    this.isLoading.set(true);
 
-  public async loadSaved() {
-    // Retrieve cached photo array data
-    const { value: photoList } = await Preferences.get({ key: this.PHOTO_STORAGE });
-    const photos = (photoList ? JSON.parse(photoList) : []) as UserPhoto[];
+    try {
+      const response = await axios.get<{ success: boolean; data: any[]; message?: string }>(
+        `${this.getPhotosUrl}?user_id=${encodeURIComponent(user.id)}`
+      );
 
-    // If running on the web...
-    if (!this.platform.is('hybrid')) {
-      // Display the photo by reading into base64 format
-      for (const photo of photos) {
-        // Read each saved photo's data from the Filesystem
-        const readFile = await Filesystem.readFile({
-          path: photo.filepath,
-          directory: Directory.Data,
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        const mappedPhotos: UserPhoto[] = response.data.data.map((item: any) => {
+          const filePath = item.file_path || '';
+          const fullWebviewPath = filePath.startsWith('http')
+            ? filePath
+            : `${this.baseUrl}${filePath}`;
+
+          return {
+            id: item.id,
+            user_id: item.user_id,
+            file_name: item.file_name,
+            file_path: filePath,
+            title: item.title ?? null,
+            description: item.description ?? null,
+            created_at: item.created_at,
+            filepath: filePath,
+            webviewPath: fullWebviewPath,
+          };
         });
 
-        // Web platform only: Load the photo as base64 data
-        photo.webviewPath = `data:image/jpeg;base64,${readFile.data}`;
+        this.photos.set(mappedPhotos);
+      } else {
+        this.photos.set([]);
+      }
+    } catch (error) {
+      console.error('Error al cargar fotos desde el servidor:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  /**
+   * Abre la cámara del dispositivo para capturar una foto.
+   */
+  public async takePhoto(): Promise<Photo | null> {
+    try {
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        quality: 90,
+      });
+      return photo;
+    } catch (error: any) {
+      if (error?.message?.includes('User cancelled') || error?.message?.includes('cancelled')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Sube la foto capturada al backend en PHP vinculándola al usuario actual.
+   */
+  public async uploadCapturedPhoto(
+    photo: Photo,
+    title: string,
+    description: string
+  ): Promise<PhotoUploadResponse> {
+    const user = this.authService.currentUser();
+    if (!user || !user.id) {
+      throw new Error('Debes iniciar sesión para subir fotografías.');
+    }
+
+    if (!title || !title.trim()) {
+      throw new Error('El título de la fotografía es obligatorio.');
+    }
+
+    if (!description || !description.trim()) {
+      throw new Error('La descripción de la fotografía es obligatoria.');
+    }
+
+    const blob = await this.getBlobFromPhoto(photo);
+    const formData = new FormData();
+    const fileName = `photo_${Date.now()}.jpg`;
+
+    formData.append('image', blob, fileName);
+    formData.append('user_id', String(user.id));
+    formData.append('title', title.trim());
+    formData.append('description', description.trim());
+
+    try {
+      // Axios con FormData detecta y añade automáticamente los boundaries multipart correctos
+      const response = await axios.post<PhotoUploadResponse>(this.uploadUrl, formData);
+
+      if (response.data && response.data.success) {
+        // Recargar las fotos desde el servidor para obtener el nuevo ID y fecha
+        await this.loadSaved();
+        return response.data;
+      } else {
+        throw new Error(response.data?.message || 'Error al guardar la fotografía en el servidor.');
+      }
+    } catch (error: any) {
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        'Error de conexión con el servidor al subir la foto.';
+      throw new Error(msg);
+    }
+  }
+
+  /**
+   * Captura y sube directamente una foto a la galería del usuario.
+   */
+  public async addNewToGallery(
+    title: string,
+    description: string
+  ): Promise<PhotoUploadResponse | null> {
+    const photo = await this.takePhoto();
+    if (!photo) {
+      return null;
+    }
+    return await this.uploadCapturedPhoto(photo, title, description);
+  }
+
+  /**
+   * Elimina la foto tanto de la base de datos MySQL como del disco del servidor PHP.
+   */
+  public async deletePhoto(photo: UserPhoto, position?: number): Promise<PhotoDeleteResponse> {
+    const user = this.authService.currentUser();
+    if (!user || !user.id) {
+      throw new Error('Debes iniciar sesión para eliminar fotografías.');
+    }
+
+    if (!photo.id) {
+      throw new Error('Identificador de foto inválido.');
+    }
+
+    try {
+      const response = await axios.post<PhotoDeleteResponse>(
+        this.deletePhotoUrl,
+        {
+          photo_id: photo.id,
+          user_id: user.id,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data && response.data.success) {
+        // Actualizar el signal reactivo eliminando la foto
+        this.photos.update((photos) => photos.filter((p) => p.id !== photo.id));
+        return response.data;
+      } else {
+        throw new Error(response.data?.message || 'Error al eliminar la foto en el servidor.');
+      }
+    } catch (error: any) {
+      const msg =
+        error.response?.data?.message ||
+        error.message ||
+        'Error al comunicar la eliminación al servidor.';
+      throw new Error(msg);
+    }
+  }
+
+  /**
+   * Convierte la foto de Capacitor a un Blob listo para FormData.
+   */
+  public async getBlobFromPhoto(photo: Photo): Promise<Blob> {
+    if (photo.webPath) {
+      try {
+        const response = await fetch(photo.webPath);
+        return await response.blob();
+      } catch (e) {
+        console.warn('Fallo al obtener blob desde webPath, probando alternativa...', e);
       }
     }
 
-    this.photos.set(photos);
+    if (this.platform.is('hybrid') && photo.path) {
+      const file = await Filesystem.readFile({ path: photo.path });
+      const base64Data = typeof file.data === 'string' ? file.data : '';
+      return this.b64toBlob(base64Data, 'image/jpeg');
+    }
+
+    if (photo.base64String) {
+      return this.b64toBlob(photo.base64String, 'image/jpeg');
+    }
+
+    throw new Error('No se pudo convertir la imagen capturada para subirla.');
   }
 
-  // Delete picture by removing it from reference data and the filesystem
-  public async deletePhoto(photo: UserPhoto, position: number) {
-    // Remove this photo from the Photos signal
-    this.photos.update((photos) => photos.filter((_, index) => index !== position));
+  /**
+   * Convierte base64 a Blob binario.
+   */
+  private b64toBlob(b64Data: string, contentType = 'image/jpeg', sliceSize = 512): Blob {
+    const cleanB64 = b64Data.includes(',') ? b64Data.split(',')[1] : b64Data;
+    const byteCharacters = atob(cleanB64);
+    const byteArrays: Uint8Array[] = [];
 
-    // Update the cached photos by overwriting the stored value
-    Preferences.set({
-      key: this.PHOTO_STORAGE,
-      value: JSON.stringify(this.photos()),
-    });
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+      const slice = byteCharacters.slice(offset, offset + sliceSize);
+      const byteNumbers = new Array(slice.length);
+      for (let i = 0; i < slice.length; i++) {
+        byteNumbers[i] = slice.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
+    }
 
-    // delete photo file from filesystem
-    const filename = photo.filepath.slice(photo.filepath.lastIndexOf('/') + 1);
-
-    await Filesystem.deleteFile({
-      path: filename,
-      directory: Directory.Data,
-    });
+    return new Blob(byteArrays as any[], { type: contentType });
   }
-}
 
-export interface UserPhoto {
-  filepath: string;
-  webviewPath?: string;
+  /**
+   * Limpia manualmente las fotos cargadas en el estado del cliente.
+   */
+  public clearPhotos(): void {
+    this.photos.set([]);
+  }
 }

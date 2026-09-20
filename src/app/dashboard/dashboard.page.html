@@ -2,10 +2,13 @@
   <ion-toolbar color="primary">
     <ion-title>Ecos</ion-title>
     <ion-buttons slot="end">
-      <ion-button routerLink="/tabs/tab2" title="Ir a Álbum">
+      <ion-button routerLink="/tabs/album" title="Mi Álbum">
         <ion-icon slot="icon-only" name="images-outline"></ion-icon>
       </ion-button>
-      <ion-button routerLink="/tabs/perfil" title="Ir a Perfil">
+      <ion-button routerLink="/tabs/camera" title="Cámara">
+        <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
+      </ion-button>
+      <ion-button routerLink="/tabs/perfil" title="Mi Perfil">
         <ion-icon slot="icon-only" name="person-circle-outline"></ion-icon>
       </ion-button>
       @if (authService.currentUser()) {
@@ -26,36 +29,49 @@
 
   <div class="ion-padding ion-text-center">
     @if (authService.currentUser(); as user) {
-      <div style="margin-bottom: 30px;">
+      <div style="margin-bottom: 24px;">
         <h1 style="font-weight: bold; color: var(--ion-color-primary);">¡Hola, {{ user.name }}! 👋</h1>
-        <p style="color: var(--ion-color-medium); font-size: 1.1rem;">Bienvenido a Ecos.</p>
+        <p style="color: var(--ion-color-medium); font-size: 1.1rem;">Bienvenido a tu diario personal.</p>
       </div>
     }
 
     <ion-grid>
       <ion-row class="ion-justify-content-center">
         <!-- Tarjeta del Álbum Fotográfico -->
-        <ion-col size="12" size-md="6" size-lg="5">
-          <ion-card routerLink="/tabs/tab2" button="true" class="dashboard-card">
+        <ion-col size="12" size-md="6" size-lg="4">
+          <ion-card routerLink="/tabs/album" button="true" class="dashboard-card">
             <ion-card-header>
-              <ion-icon name="camera-outline" color="primary" style="font-size: 4rem;"></ion-icon>
-              <ion-card-title style="margin-top: 10px;">Capturar Recuerdos</ion-card-title>
+              <ion-icon name="images-outline" color="primary" style="font-size: 3.5rem;"></ion-icon>
+              <ion-card-title style="margin-top: 10px;">Mi Álbum</ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              Entra a tu álbum privado para tomar fotografías, documentar tu día y gestionar tus memorias visuales.
+              Visualiza todas tus fotos guardadas en el servidor, consulta notas y administra tu galería privada.
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+
+        <!-- Tarjeta de Captura / Cámara -->
+        <ion-col size="12" size-md="6" size-lg="4">
+          <ion-card routerLink="/tabs/camera" button="true" class="dashboard-card">
+            <ion-card-header>
+              <ion-icon name="camera-outline" color="secondary" style="font-size: 3.5rem;"></ion-icon>
+              <ion-card-title style="margin-top: 10px;">Capturar Recuerdo</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              Abre la cámara o tu galería para capturar momentos, añadir títulos, notas y guardarlos al instante.
             </ion-card-content>
           </ion-card>
         </ion-col>
 
         <!-- Tarjeta del Perfil -->
-        <ion-col size="12" size-md="6" size-lg="5">
+        <ion-col size="12" size-md="6" size-lg="4">
           <ion-card routerLink="/tabs/perfil" button="true" class="dashboard-card">
             <ion-card-header>
-              <ion-icon name="person-outline" color="secondary" style="font-size: 4rem;"></ion-icon>
+              <ion-icon name="person-outline" color="tertiary" style="font-size: 3.5rem;"></ion-icon>
               <ion-card-title style="margin-top: 10px;">Mi Perfil</ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              Revisa la información de tu cuenta, ajusta tus preferencias y administra tu espacio personal.
+              Revisa la información de tu cuenta, ajusta tus datos y administra tu sesión personal.
             </ion-card-content>
           </ion-card>
         </ion-col>

@@ -14,8 +14,17 @@ export const routes: Routes = [
         loadComponent: () => import('../dashboard/dashboard.page').then((m) => m.DashboardPage),
       },
       {
+        path: 'album',
+        loadComponent: () => import('../album/album.page').then((m) => m.AlbumPage),
+      },
+      {
+        path: 'camera',
+        loadComponent: () => import('../camera/camera.page').then((m) => m.CameraPage),
+      },
+      {
         path: 'tab2',
-        loadComponent: () => import('../tab2/tab2.page').then((m) => m.Tab2Page),
+        redirectTo: 'album',
+        pathMatch: 'full',
       },
       {
         path: 'tab3',
