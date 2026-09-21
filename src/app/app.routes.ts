@@ -39,6 +39,7 @@ export const routes: Routes = [
   },
   {
     path: 'notes',
-    loadComponent: () => import('./notes/notes.page').then( m => m.NotesPage)
+    redirectTo: 'tabs/notes',
+    pathMatch: 'full',
   },
 ];

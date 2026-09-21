@@ -22,14 +22,8 @@ export const routes: Routes = [
         loadComponent: () => import('../camera/camera.page').then((m) => m.CameraPage),
       },
       {
-        path: 'tab2',
-        redirectTo: 'album',
-        pathMatch: 'full',
-      },
-      {
-        path: 'tab3',
-        redirectTo: 'perfil',
-        pathMatch: 'full',
+        path: 'notes',
+        loadComponent: () => import('../notes/notes.page').then((m) => m.NotesPage),
       },
       {
         path: 'perfil',

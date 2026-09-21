@@ -1,6 +1,15 @@
 import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonThumbnail,
   IonHeader,
   IonToolbar,
   IonTitle,
@@ -11,13 +20,10 @@ import {
   IonGrid,
   IonRow,
   IonCol,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
+  IonPopover,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { logInOutline, logOutOutline, imagesOutline, personCircleOutline, cameraOutline, personOutline } from 'ionicons/icons';
+import { logInOutline, logOutOutline, imagesOutline, personCircleOutline, cameraOutline, personOutline, bookOutline, book, ellipsisVertical } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -37,14 +43,20 @@ import { AuthService } from '../services/auth.service';
     IonCol,
     IonCard,
     IonCardHeader,
+    IonCardSubtitle,
     IonCardTitle,
     IonCardContent,
+    IonItem,
+    IonLabel,
+    IonList,
+    IonThumbnail,
+    IonPopover,
     RouterLink,
   ],
 })
 export class DashboardPage {
   constructor(public authService: AuthService, private router: Router) {
-    addIcons({ logInOutline, logOutOutline, imagesOutline, personCircleOutline, cameraOutline, personOutline });
+    addIcons({ logInOutline, logOutOutline, imagesOutline, personCircleOutline, cameraOutline, personOutline, bookOutline, book, ellipsisVertical });
   }
 
   async logout() {

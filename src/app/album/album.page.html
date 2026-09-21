@@ -1,7 +1,10 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/dashboard" title="Volver"></ion-back-button>
+      <ion-back-button
+        defaultHref="/tabs/dashboard"
+        title="Volver"
+      ></ion-back-button>
     </ion-buttons>
     <ion-title>Mi Álbum</ion-title>
     <ion-buttons slot="end">
@@ -26,41 +29,68 @@
 
   <!-- Indicador de Carga -->
   @if (photoService.isLoading()) {
-    <div class="loading-container ion-text-center ion-padding">
-      <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p>Cargando tus fotografías...</p>
-    </div>
+  <div class="loading-container ion-text-center ion-padding">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando tus fotografías...</p>
+  </div>
   } @else if (photoService.photos().length === 0) {
-    <!-- Estado Vacío -->
-    <div class="empty-state ion-text-center ion-padding">
-      <ion-icon name="images-outline"></ion-icon>
-      <h3>Tu álbum está vacío</h3>
-      <p>Aún no tienes recuerdos guardados en el servidor.</p>
-      <ion-button (click)="goToCamera()" color="primary" class="ion-margin-top" shape="round">
-        <ion-icon slot="start" name="camera"></ion-icon>
-        Tomar primera foto
-      </ion-button>
-    </div>
+  <!-- Estado Vacío -->
+  <div class="empty-state ion-text-center ion-padding">
+    <ion-icon name="images-outline"></ion-icon>
+    <h3>Tu álbum está vacío</h3>
+    <p>Aún no tienes recuerdos guardados en el servidor.</p>
+    <ion-button
+      (click)="goToCamera()"
+      color="primary"
+      class="ion-margin-top"
+      shape="round"
+    >
+      <ion-icon slot="start" name="camera"></ion-icon>
+      Tomar primera foto
+    </ion-button>
+  </div>
   } @else {
-    <!-- Cuadrícula de Fotografías -->
-    <ion-grid class="photos-grid">
-      <ion-row>
-        @for (photo of photoService.photos(); track (photo.id ?? photo.file_name ?? $index); let position = $index) {
-          <ion-col size="6" size-md="4" size-lg="3">
-            <div class="photo-card" (click)="showActionSheet(photo, position)">
-              <div class="image-wrapper">
-                <img [src]="photo.webviewPath" [alt]="photo.title || ('Foto ' + (position + 1))" loading="lazy" />
-              </div>
-              @if (photo.title) {
-                <div class="photo-info">
-                  <span class="photo-title">{{ photo.title }}</span>
-                </div>
-              }
+
+  <!-- Cuadrícula de Fotografías -->
+  <ion-grid class="photos-grid">
+    <ion-row>
+      @for (photo of photoService.photos(); track (photo.id ?? photo.file_name
+      ?? $index); let position = $index) {
+      <ion-col size="6" size-md="4" size-lg="3">
+        <div class="photo-card" (click)="showActionSheet(photo, position)">
+          <div class="image-wrapper">
+            <img
+              [src]="photo.webviewPath"
+              [alt]="photo.title || ('Foto ' + (position + 1))"
+              loading="lazy"
+            />
+          </div>
+
+          <div class="photo-header-row">
+            @if (photo.title) {
+            <div class="photo-info">
+              <span class="photo-label">Título:</span>
+              <span class="photo-title">{{ photo.title }}</span>
             </div>
-          </ion-col>
-        }
-      </ion-row>
-    </ion-grid>
+            } @if (photo.created_at) {
+            <div class="photo-info">
+              <span class="photo-label">Guardada:</span>
+              <span class="date-info">{{ photo.created_at }}</span>
+            </div>
+            }
+          </div>
+
+          @if (photo.description) {
+          <div class="photo-info">
+            <span class="photo-label">Descripción:</span>
+            <span class="photo-description">{{ photo.description }}</span>
+          </div>
+          }
+        </div>
+      </ion-col>
+      }
+    </ion-row>
+  </ion-grid>
   }
 
   <!-- Botón Flotante para ir a la Cámara -->

@@ -1,9 +1,14 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/tabs/album" text="Álbum"></ion-back-button>
+      <ion-back-button defaultHref="/tabs/dashboard"></ion-back-button>
     </ion-buttons>
     <ion-title>Capturar Foto</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/tabs/album" title="Album">
+        <ion-icon slot="icon-only" name="images-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -57,7 +62,7 @@
               <ion-input
                 label="Título *"
                 labelPlacement="stacked"
-                placeholder="Ej. Tarde en el parque (Obligatorio)"
+                placeholder="Ej. Tarde en el parque"
                 [(ngModel)]="title"
                 required="true"
               ></ion-input>
@@ -67,7 +72,7 @@
               <ion-textarea
                 label="Descripción / Nota *"
                 labelPlacement="stacked"
-                placeholder="Escribe lo que significó este momento... (Obligatorio)"
+                placeholder="Escribe lo que significó este momento..."
                 [autoGrow]="true"
                 rows="3"
                 [(ngModel)]="description"

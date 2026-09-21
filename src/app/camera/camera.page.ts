@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   IonContent,
   IonHeader,
@@ -30,6 +30,7 @@ import {
   refreshOutline,
   closeOutline,
   checkmarkCircleOutline,
+  imagesOutline,
 } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Photo } from '@capacitor/camera';
@@ -57,6 +58,7 @@ import { PhotoService } from '../services/photo.service';
     IonCardContent,
     IonCardHeader,
     IonCardTitle,
+    RouterLink,
   ],
 })
 export class CameraPage {
@@ -80,6 +82,7 @@ export class CameraPage {
       refreshOutline,
       closeOutline,
       checkmarkCircleOutline,
+      imagesOutline,
     });
   }
 
