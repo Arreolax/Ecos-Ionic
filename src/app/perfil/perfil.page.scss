@@ -4,6 +4,15 @@
   padding: 16px;
 }
 
+.chips-container {
+  display: flex;
+  justify-content: center; 
+  align-items: center;     
+  gap: 16px;               
+  margin: 16px 0;          
+  flex-wrap: wrap;         
+}
+
 .avatar-section {
   display: flex;
   flex-direction: column;

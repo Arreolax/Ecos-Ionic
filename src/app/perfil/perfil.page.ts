@@ -1,8 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import {
+import { Router, RouterLink  } from '@angular/router';
+import { 
   IonContent,
   IonHeader,
   IonTitle,
@@ -20,6 +20,12 @@ import {
   IonSpinner,
   ToastController,
   AlertController,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonPopover,
+  IonChip,
+  ViewWillEnter
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
@@ -35,8 +41,15 @@ import {
   personCircleOutline,
   callOutline,
   atOutline,
+  bookOutline,
+  book,
+  ellipsisVertical,
+  imagesOutline,
 } from 'ionicons/icons';
+
 import { AuthService } from '../services/auth.service';
+import { PhotoService } from '../services/photo.service';
+import { NotesService } from '../notes/notes.service';
 
 @Component({
   selector: 'app-perfil',
@@ -60,12 +73,21 @@ import { AuthService } from '../services/auth.service';
     IonModal,
     IonInput,
     IonSpinner,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonPopover,
+    RouterLink,
+    IonChip
   ],
 })
-export class PerfilPage implements OnInit {
+export class PerfilPage implements OnInit, ViewWillEnter {
   isEditModalOpen: boolean = false;
   isSaving: boolean = false;
   isDeleting: boolean = false;
+
+  totalPhotos: number = 0;
+  totalNotes: number = 0;
 
   editData = {
     name: '',
@@ -77,6 +99,8 @@ export class PerfilPage implements OnInit {
 
   constructor(
     public authService: AuthService,
+    private photoService: PhotoService,
+    private notesService: NotesService, 
     private router: Router,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
@@ -95,10 +119,42 @@ export class PerfilPage implements OnInit {
       personCircleOutline,
       callOutline,
       atOutline,
+      bookOutline,
+      book,
+      ellipsisVertical,
+      imagesOutline,
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.loadStats();
+  }
+
+  ionViewWillEnter() {
+    this.loadStats();
+  }
+
+  async loadStats() {
+
+    await this.photoService.loadSaved();
+    this.totalPhotos = this.photoService.photos().length;
+
+
+    const user = this.authService.currentUser();
+    if (user && user.id) {
+      this.notesService.getNotes(Number(user.id)).subscribe({
+        next: (notes) => {
+          this.totalNotes = notes.length;
+          this.cdr.detectChanges(); 
+        },
+        error: (err) => {
+          console.error('Error al cargar cantidad de notas', err);
+          this.totalNotes = 0;
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
 
   async showToast(message: string, color: 'success' | 'danger' | 'warning') {
     const toast = await this.toastCtrl.create({
@@ -216,5 +272,10 @@ export class PerfilPage implements OnInit {
       this.isDeleting = false;
       this.cdr.detectChanges();
     }
+  }
+
+  async logout() {
+    await this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

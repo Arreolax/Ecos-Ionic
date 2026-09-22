@@ -4,6 +4,45 @@
       <ion-back-button defaultHref="/tabs/dashboard" title="Volver"></ion-back-button>
     </ion-buttons>
     <ion-title>Mi Perfil</ion-title>
+    <ion-buttons slot="end">
+      <ion-button id="settings-trigger" title="Opciones">
+        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
+      </ion-button>
+
+      <ion-popover
+        trigger="settings-trigger"
+        [dismissOnSelect]="true"
+        side="bottom"
+        alignment="end"
+      >
+        <ng-template>
+          <ion-content class="ion-no-padding">
+            <ion-list lines="none">
+              <ion-item button routerLink="/tabs/notes" detail="false">
+                <ion-icon slot="start" name="book-outline"></ion-icon>
+                <ion-label>Mis Notas</ion-label>
+              </ion-item>
+
+              <ion-item button routerLink="/tabs/album" detail="false">
+                <ion-icon slot="start" name="images-outline"></ion-icon>
+                <ion-label>Mi Álbum</ion-label>
+              </ion-item>
+
+              @if (authService.currentUser()) {
+              <ion-item button (click)="logout()" detail="false">
+                <ion-icon
+                  slot="start"
+                  name="log-out-outline"
+                  color="danger"
+                ></ion-icon>
+                <ion-label color="danger">Cerrar Sesión</ion-label>
+              </ion-item>
+              }
+            </ion-list>
+          </ion-content>
+        </ng-template>
+      </ion-popover>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -20,6 +59,12 @@
           <p class="profile-username">&#64;{{ user.username }}</p>
         }
         <span class="profile-badge">Usuario Activo</span>
+      </div>
+
+      <!-- Chips de estadísticas -->
+      <div class="chips-container">
+        <ion-chip color="primary">Fotos Tomadas: {{ totalPhotos }}</ion-chip>
+        <ion-chip color="tertiary">Notas Hechas: {{ totalNotes }}</ion-chip>
       </div>
 
       <!-- Tarjeta con información del usuario -->

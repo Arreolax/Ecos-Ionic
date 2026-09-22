@@ -1,16 +1,16 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
     <ion-title>Ecos</ion-title>
-    
+
     <ion-buttons slot="end">
       <ion-button routerLink="/tabs/camera" title="Cámara">
         <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
       </ion-button>
-      
+
       <ion-button id="settings-trigger" title="Opciones">
-        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon> 
+        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
       </ion-button>
-      
+
       <ion-popover
         trigger="settings-trigger"
         [dismissOnSelect]="true"
@@ -20,31 +20,30 @@
         <ng-template>
           <ion-content class="ion-no-padding">
             <ion-list lines="none">
-              
               <ion-item button routerLink="/tabs/notes" detail="false">
                 <ion-icon slot="start" name="book-outline"></ion-icon>
                 <ion-label>Mis Notas</ion-label>
               </ion-item>
-              
+
               <ion-item button routerLink="/tabs/album" detail="false">
                 <ion-icon slot="start" name="images-outline"></ion-icon>
                 <ion-label>Mi Álbum</ion-label>
               </ion-item>
-              
+
               <ion-item button routerLink="/tabs/perfil" detail="false">
                 <ion-icon slot="start" name="person-outline"></ion-icon>
                 <ion-label>Mi Perfil</ion-label>
               </ion-item>
 
               @if (authService.currentUser()) {
-                <ion-item button (click)="logout()" detail="false">
-                  <ion-icon
-                    slot="start"
-                    name="log-out-outline"
-                    color="danger"
-                  ></ion-icon>
-                  <ion-label color="danger">Cerrar Sesión</ion-label>
-                </ion-item>
+              <ion-item button (click)="logout()" detail="false">
+                <ion-icon
+                  slot="start"
+                  name="log-out-outline"
+                  color="danger"
+                ></ion-icon>
+                <ion-label color="danger">Cerrar Sesión</ion-label>
+              </ion-item>
               }
             </ion-list>
           </ion-content>
@@ -90,8 +89,8 @@
               <ion-card-title>Capturar Recuerdo</ion-card-title>
             </ion-card-header>
             <ion-card-content>
-              Abre la cámara o tu galería para capturar momentos, añadir
-              títulos y guardarlos al instante.
+              Abre la cámara o tu galería para capturar momentos, añadir títulos
+              y guardarlos al instante.
             </ion-card-content>
           </ion-card>
         </ion-col>
@@ -108,44 +107,89 @@
               ></ion-icon>
               <ion-card-title>Mi Álbum</ion-card-title>
               <ion-card-subtitle
-                >Visualiza todas tus fotos guardadas en el servidor, consulta
-                notas y administra tu galería privada.</ion-card-subtitle
+                >Visualiza tus fotos guardadas en el servidor, consulta detalles
+                y administra tu galería.</ion-card-subtitle
               >
             </ion-card-header>
             <ion-card-content>
-              <ion-list>
-                <ion-item>
-                  <ion-thumbnail slot="start">
+              @if (photoService.isLoading()) {
+              <div class="ion-text-center ion-padding-vertical">
+                <ion-spinner name="crescent" color="primary"></ion-spinner>
+                <p
+                  style="
+                    color: var(--ion-color-medium);
+                    font-size: 0.9rem;
+                    margin-top: 6px;
+                  "
+                >
+                  Cargando fotos...
+                </p>
+              </div>
+              } @else if (recentPhotos.length === 0) {
+              <div class="empty-album ion-text-center ion-padding-vertical">
+                <ion-icon
+                  name="images-outline"
+                  style="font-size: 2.5rem; color: var(--ion-color-medium)"
+                ></ion-icon>
+                <p style="color: var(--ion-color-medium); margin-top: 8px">
+                  Aún no has guardado fotos en tu álbum.
+                </p>
+              </div>
+              <div class="ion-padding-horizontal ion-padding-bottom">
+                <ion-button
+                  expand="block"
+                  fill="outline"
+                  routerLink="/tabs/camera"
+                >
+                  <ion-icon slot="start" name="camera-outline"></ion-icon>
+                  Tomar Foto
+                </ion-button>
+              </div>
+              } @else {
+              <ion-list lines="inset">
+                @for (photo of recentPhotos; track (photo.id ?? photo.file_name
+                ?? $index)) {
+                <ion-item button routerLink="/tabs/album" detail="true">
+                  <ion-thumbnail slot="start" class="photo-preview-thumbnail">
                     <img
-                      alt="Silhouette of mountains"
-                      src="https://ionicframework.com/docs/img/demos/thumbnail.svg"
+                      [src]="photo.webviewPath"
+                      [alt]="photo.title || 'Foto'"
+                      loading="lazy"
                     />
                   </ion-thumbnail>
-                  <ion-label>Item</ion-label>
+                  <ion-label>
+                    <h3 style="font-weight: 600">
+                      {{ photo.title || 'Sin título' }}
+                    </h3>
+                    @if (photo.created_at) {
+                    <p
+                      style="font-size: 0.8rem; color: var(--ion-color-medium)"
+                    >
+                      {{ photo.created_at }}
+                    </p>
+                    } @else if (photo.description) {
+                    <p
+                      style="font-size: 0.8rem; color: var(--ion-color-medium)"
+                    >
+                      {{ photo.description }}
+                    </p>
+                    }
+                  </ion-label>
                 </ion-item>
-
-                <ion-item>
-                  <ion-thumbnail slot="start">
-                    <img
-                      alt="Silhouette of mountains"
-                      src="https://ionicframework.com/docs/img/demos/thumbnail.svg"
-                    />
-                  </ion-thumbnail>
-                  <ion-label>Item</ion-label>
-                </ion-item>
-
-                <ion-item>
-                  <ion-thumbnail slot="start">
-                    <img
-                      alt="Silhouette of mountains"
-                      src="https://ionicframework.com/docs/img/demos/thumbnail.svg"
-                    />
-                  </ion-thumbnail>
-                  <ion-label>Item</ion-label>
-                </ion-item>
+                }
               </ion-list>
+              <div class="ion-padding-horizontal ion-padding-bottom">
+                <ion-button
+                  expand="block"
+                  fill="outline"
+                  routerLink="/tabs/album"
+                >
+                  <ion-icon slot="start" name="images-outline"></ion-icon>
+                  Ver Álbum Completo
+                </ion-button>
+              </div>
+              }
             </ion-card-content>
-            <ion-button routerLink="/tabs/album">Action 1</ion-button>
           </ion-card>
         </ion-col>
 
@@ -158,42 +202,75 @@
                 style="font-size: 3.5rem"
               ></ion-icon>
               <ion-card-title>Mis Notas</ion-card-title>
-              <ion-card-subtitle>Card Subtitle</ion-card-subtitle>
+              <ion-card-subtitle
+                >Organiza tus ideas, tareas pendientes y reflexiones personales.</ion-card-subtitle
+              >
             </ion-card-header>
             <ion-card-content>
-              <ion-list>
-                <ion-item>
-                  <ion-thumbnail slot="start">
-                    <img
-                      alt="Silhouette of mountains"
-                      src="https://ionicframework.com/docs/img/demos/thumbnail.svg"
-                    />
-                  </ion-thumbnail>
-                  <ion-label>Item</ion-label>
+              @if (isLoadingNotes) {
+              <div class="ion-text-center ion-padding-vertical">
+                <ion-spinner name="crescent" color="primary"></ion-spinner>
+                <p
+                  style="
+                    color: var(--ion-color-medium);
+                    font-size: 0.9rem;
+                    margin-top: 6px;
+                  "
+                >
+                  Cargando notas...
+                </p>
+              </div>
+              } @else if (recentNotes.length === 0) {
+              <div class="empty-album ion-text-center ion-padding-vertical">
+                <ion-icon name="book-outline" style="font-size: 2.5rem; color: var(--ion-color-medium);"></ion-icon>
+                <p style="color: var(--ion-color-medium); margin-top: 8px;">Aún no tienes notas guardadas.</p>
+              </div>
+              } @else {
+              <ion-list lines="inset" class="notes-preview-list">
+                @for (note of recentNotes; track note.id) {
+                <ion-item button routerLink="/tabs/notes" detail="true" class="note-preview-item">
+                  <div
+                    slot="start"
+                    class="note-color-indicator"
+                    [style.background-color]="note.color || '#3880ff'"
+                  ></div>
+                  <ion-label>
+                    <div class="note-preview-header">
+                      <h3 style="font-weight: 600;">
+                        {{ note.title || 'Sin título' }}
+                      </h3>
+                      @if (note.is_pinned) {
+                      <ion-icon name="bookmark" color="warning" style="font-size: 0.9rem; margin-left: 4px;"></ion-icon>
+                      }
+                    </div>
+                    <div class="note-preview-meta">
+                      <ion-badge
+                        class="note-category-badge"
+                        [style.background-color]="(note.color || '#3880ff') + '22'"
+                        [style.color]="note.color || '#3880ff'"
+                      >
+                        {{ note.category }}
+                      </ion-badge>
+                      @if (note.created_at) {
+                      <span class="note-date-text">
+                        <ion-icon name="time-outline"></ion-icon>
+                        {{ note.created_at }}
+                      </span>
+                      }
+                    </div>
+                    <p class="note-content-preview">{{ note.content }}</p>
+                  </ion-label>
                 </ion-item>
-
-                <ion-item>
-                  <ion-thumbnail slot="start">
-                    <img
-                      alt="Silhouette of mountains"
-                      src="https://ionicframework.com/docs/img/demos/thumbnail.svg"
-                    />
-                  </ion-thumbnail>
-                  <ion-label>Item</ion-label>
-                </ion-item>
-
-                <ion-item>
-                  <ion-thumbnail slot="start">
-                    <img
-                      alt="Silhouette of mountains"
-                      src="https://ionicframework.com/docs/img/demos/thumbnail.svg"
-                    />
-                  </ion-thumbnail>
-                  <ion-label>Item</ion-label>
-                </ion-item>
+                }
               </ion-list>
+              }
             </ion-card-content>
-            <ion-button routerLink="/tabs/camera">Action 1</ion-button>
+            <div class="ion-padding-horizontal ion-padding-bottom">
+              <ion-button expand="block" fill="outline" routerLink="/tabs/notes">
+                <ion-icon slot="start" name="book-outline"></ion-icon>
+                Ver Mis Notas
+              </ion-button>
+            </div>
           </ion-card>
         </ion-col>
       </ion-row>
