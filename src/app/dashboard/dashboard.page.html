@@ -1,57 +1,4 @@
-<ion-header [translucent]="true">
-  <ion-toolbar color="primary">
-    <ion-title>Ecos</ion-title>
-
-    <ion-buttons slot="end">
-      <ion-button routerLink="/tabs/camera" title="Cámara">
-        <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
-      </ion-button>
-
-      <ion-button id="settings-trigger" title="Opciones">
-        <ion-icon slot="icon-only" name="ellipsis-vertical"></ion-icon>
-      </ion-button>
-
-      <ion-popover
-        trigger="settings-trigger"
-        [dismissOnSelect]="true"
-        side="bottom"
-        alignment="end"
-      >
-        <ng-template>
-          <ion-content class="ion-no-padding">
-            <ion-list lines="none">
-              <ion-item button routerLink="/tabs/notes" detail="false">
-                <ion-icon slot="start" name="book-outline"></ion-icon>
-                <ion-label>Mis Notas</ion-label>
-              </ion-item>
-
-              <ion-item button routerLink="/tabs/album" detail="false">
-                <ion-icon slot="start" name="images-outline"></ion-icon>
-                <ion-label>Mi Álbum</ion-label>
-              </ion-item>
-
-              <ion-item button routerLink="/tabs/perfil" detail="false">
-                <ion-icon slot="start" name="person-outline"></ion-icon>
-                <ion-label>Mi Perfil</ion-label>
-              </ion-item>
-
-              @if (authService.currentUser()) {
-              <ion-item button (click)="logout()" detail="false">
-                <ion-icon
-                  slot="start"
-                  name="log-out-outline"
-                  color="danger"
-                ></ion-icon>
-                <ion-label color="danger">Cerrar Sesión</ion-label>
-              </ion-item>
-              }
-            </ion-list>
-          </ion-content>
-        </ng-template>
-      </ion-popover>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<app-header></app-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
   <ion-header collapse="condense">
@@ -64,10 +11,10 @@
     @if (authService.currentUser(); as user) {
     <div style="margin-bottom: 24px">
       <h1 style="font-weight: bold; color: var(--ion-color-primary)">
-        ¡Bienvenido, {{ user.name }}! 👋
+        ¡Bienvenid@, {{ user.name }}! 👋
       </h1>
       <p style="color: var(--ion-color-medium); font-size: 1.1rem">
-        Bienvenido a tu diario personal.
+        Bienvenid@ a tu diario personal.
       </p>
     </div>
     }
@@ -165,6 +112,7 @@
                     <p
                       style="font-size: 0.8rem; color: var(--ion-color-medium)"
                     >
+                    <ion-icon name="time-outline"></ion-icon>
                       {{ photo.created_at }}
                     </p>
                     } @else if (photo.description) {

@@ -1,0 +1,64 @@
+<!-- Eliminamos ion-no-border para aplicar nuestra propia sombra -->
+<ion-header class="header-sombreado" [translucent]="true">
+  <ion-toolbar color="primary">
+    
+    <ion-title class="titulo-destacado">
+      Ecos
+    </ion-title>
+
+    <ion-buttons slot="end">
+      <ion-button routerLink="/tabs/camera" title="Cámara" class="ion-margin-end" shape="round" fill="clear" color="light">
+        <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
+      </ion-button>
+
+      <ion-button id="settings-trigger" title="Opciones" shape="round" fill="clear" color="light">
+        <ion-icon slot="icon-only" name="person-circle-outline" class="icono-grande"></ion-icon>
+      </ion-button>
+
+      <ion-popover
+        trigger="settings-trigger"
+        [dismissOnSelect]="true"
+        side="bottom"
+        alignment="end"
+        class="popover-redondeado"
+      >
+        <ng-template>
+          <ion-content class="ion-no-padding">
+            <ion-list lines="none" class="ion-padding-vertical">
+              
+              @if (authService.currentUser()) {
+                <ion-list-header class="header-menu">
+                  <ion-label color="medium">MI CUENTA</ion-label>
+                </ion-list-header>
+              }
+
+              <ion-item button routerLink="/tabs/notes" detail="false" class="item-interactivo">
+                <ion-icon slot="start" name="book-outline" color="primary"></ion-icon>
+                <ion-label>Mis Notas</ion-label>
+              </ion-item>
+
+              <ion-item button routerLink="/tabs/album" detail="false" class="item-interactivo">
+                <ion-icon slot="start" name="images-outline" color="tertiary"></ion-icon>
+                <ion-label>Mi Álbum</ion-label>
+              </ion-item>
+
+              <ion-item button routerLink="/tabs/perfil" detail="false" class="item-interactivo">
+                <ion-icon slot="start" name="person-outline" color="secondary"></ion-icon>
+                <ion-label>Mi Perfil</ion-label>
+              </ion-item>
+
+              @if (authService.currentUser()) {
+                <div class="divisor-menu"></div>
+                
+                <ion-item button (click)="logout()" detail="false" class="item-interactivo-peligro">
+                  <ion-icon slot="start" name="log-out-outline" color="danger"></ion-icon>
+                  <ion-label color="danger" class="texto-peligro">Cerrar Sesión</ion-label>
+                </ion-item>
+              }
+            </ion-list>
+          </ion-content>
+        </ng-template>
+      </ion-popover>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>

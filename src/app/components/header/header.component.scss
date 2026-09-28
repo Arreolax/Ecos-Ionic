@@ -1,0 +1,59 @@
+/* Da profundidad al encabezado, eliminando la apariencia plana */
+.header-sombreado {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Mejora la jerarquía del título */
+.titulo-destacado {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* Ajusta el tamaño del ícono de perfil */
+.icono-grande {
+  font-size: 1.8rem;
+}
+
+/* Estiliza la caja del popover usando variables nativas de Ionic */
+ion-popover.popover-redondeado {
+  --offset-y: 8px; /* Separación del botón */
+  --border-radius: 12px;
+  --box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Ajustes del encabezado del menú */
+.header-menu ion-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Efectos hover para los elementos del menú (funciona en web/escritorio) */
+.item-interactivo {
+  --transition: background-color 0.2s ease;
+  
+  &::part(native):hover {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+}
+
+/* Efecto hover específico para el botón de cerrar sesión */
+.item-interactivo-peligro {
+  --transition: background-color 0.2s ease;
+
+  &::part(native):hover {
+    background-color: rgba(var(--ion-color-danger-rgb), 0.1);
+  }
+}
+
+.texto-peligro {
+  font-weight: 600;
+}
+
+/* Línea separadora limpia para el menú */
+.divisor-menu {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 8px 16px;
+}

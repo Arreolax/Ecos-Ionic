@@ -44,6 +44,8 @@ import { AuthService } from '../services/auth.service';
 import { PhotoService, UserPhoto } from '../services/photo.service';
 import { NotesService, Note } from '../notes/notes.service';
 
+import { HeaderComponent } from '../components/header/header.component';
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: 'dashboard.page.html',
@@ -72,6 +74,7 @@ import { NotesService, Note } from '../notes/notes.service';
     IonSpinner,
     IonBadge,
     RouterLink,
+    HeaderComponent
   ],
 })
 export class DashboardPage implements OnInit, ViewWillEnter {
@@ -80,7 +83,6 @@ export class DashboardPage implements OnInit, ViewWillEnter {
   private notesService = inject(NotesService);
   private router = inject(Router);
   
-  // <-- Inyectamos el detector de cambios
   private cdr = inject(ChangeDetectorRef); 
 
   recentNotes: Note[] = [];
@@ -160,8 +162,5 @@ export class DashboardPage implements OnInit, ViewWillEnter {
     return this.photoService.photos().slice(0, 3);
   }
 
-  async logout() {
-    await this.authService.logout();
-    this.router.navigate(['/login']);
-  }
+  
 }
