@@ -1,0 +1,135 @@
+.photos-grid {
+  padding: 10px;
+}
+
+.photo-card {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: var(--ion-card-background, #ffffff);
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  .image-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Foto cuadrada */
+    overflow: hidden;
+    background: #e9ecef;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .favorite-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      border: none;
+      border-radius: 50%;
+      width: 30px; /* Reducido un poco para no tapar tanto la foto pequeña */
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #ffffff;
+      z-index: 2;
+
+      &.active {
+        color: #eb445a;
+        background: rgba(255, 255, 255, 0.9);
+      }
+    }
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 65vh;
+  color: var(--ion-color-medium);
+  text-align: center;
+  ion-icon {
+    font-size: 72px;
+    margin-bottom: 14px;
+    opacity: 0.55;
+    color: var(--ion-color-primary);
+  }
+  h3 {
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+}
+
+.photo-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.photo-info {
+  padding: 6px 8px; /* Ajustado para tarjetas pequeñas */
+  background: var(--ion-card-background, #ffffff);
+
+  .photo-label {
+    font-size: 0.65rem; /* Ajustado */
+    font-weight: 700;
+    color: var(--ion-color-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .photo-title {
+    display: block;
+    font-size: 0.95rem; /* Ajustado */
+    font-weight: 700;
+    color: var(--ion-text-color, #222);
+    line-height: 1.2;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .photo-description {
+    display: block;
+    font-size: 0.75rem; /* Ajustado */
+    font-weight: 400;
+    color: var(--ion-color-medium, #777);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .date-info {
+    display: flex;
+    font-size: 0.75rem; /* Ajustado para que quepa la fecha en pantallas pequeñas */
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

@@ -1,6 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Component, OnInit, inject, computed } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { Router, RouterLink } from "@angular/router";
 import {
   IonHeader,
   IonToolbar,
@@ -22,9 +22,9 @@ import {
   AlertController,
   LoadingController,
   ToastController,
-} from '@ionic/angular';
-import { ViewWillEnter } from '@ionic/angular';
-import { addIcons } from 'ionicons';
+} from "@ionic/angular";
+import { ViewWillEnter } from "@ionic/angular";
+import { addIcons } from "ionicons";
 import {
   camera,
   trash,
@@ -33,15 +33,26 @@ import {
   imagesOutline,
   addOutline,
   cameraOutline,
-} from 'ionicons/icons';
-import type { UserPhoto } from '../services/photo.service';
-import { PhotoService } from '../services/photo.service';
-import { AuthService } from '../services/auth.service';
+  heart,
+  heartOutline,
+  folderOutline,
+  folder,
+} from "ionicons/icons";
+import type { UserPhoto } from "../services/photo.service";
+import { PhotoService } from "../services/photo.service";
+import { AuthService } from "../services/auth.service";
+
+export interface FolderGroup {
+  folder_id: number | string;
+  folder_name: string;
+  coverPhotos: UserPhoto[];
+  photoCount: number;
+}
 
 @Component({
-  selector: 'app-album',
-  templateUrl: './album.page.html',
-  styleUrls: ['./album.page.scss'],
+  selector: "app-album",
+  templateUrl: "./album.page.html",
+  styleUrls: ["./album.page.scss"],
   imports: [
     CommonModule,
     RouterLink,
@@ -72,6 +83,80 @@ export class AlbumPage implements OnInit, ViewWillEnter {
   private toastCtrl = inject(ToastController);
   private router = inject(Router);
 
+  public folderGroups = computed(() => {
+    const photos = this.photoService.photos();
+    const groups = new Map<string | number, FolderGroup>();
+
+    if (photos.length === 0) {
+      return [];
+    }
+
+    const todasGroup: FolderGroup = {
+      folder_id: 1,
+      folder_name: "Todas las Imagenes",
+      coverPhotos: [],
+      photoCount: 0,
+    };
+
+    const favoritasGroup: FolderGroup = {
+      folder_id: 'favoritas',
+      folder_name: "Favoritas",
+      coverPhotos: [],
+      photoCount: 0,
+    };
+
+    for (const photo of photos) {
+      todasGroup.photoCount++;
+      if (todasGroup.coverPhotos.length < 3) {
+        todasGroup.coverPhotos.push(photo);
+      }
+
+      if (photo.isFavorite || (photo as any).favorite) {
+        favoritasGroup.photoCount++;
+        if (favoritasGroup.coverPhotos.length < 3) {
+          favoritasGroup.coverPhotos.push(photo);
+        }
+      }
+
+      const folderId = photo.folder_id ?? 3;
+      const folderName = photo.folder_name || "Sin Carpeta";
+
+      if (
+        folderId === 1 ||
+        folderId === 2 ||
+        folderId === 3 ||
+        folderName === "Sin Carpeta" ||
+        folderName === "Ocultas" ||
+        folderId === 'favoritas' 
+      ) {
+        continue;
+      }
+
+      if (!groups.has(folderId)) {
+        groups.set(folderId, {
+          folder_id: folderId,
+          folder_name: folderName,
+          coverPhotos: [photo],
+          photoCount: 1,
+        });
+      } else {
+        const group = groups.get(folderId)!;
+        group.photoCount++;
+
+        if (group.coverPhotos.length < 3) {
+          group.coverPhotos.push(photo);
+        }
+      }
+    }
+
+    const result = Array.from(groups.values());
+    
+    result.unshift(favoritasGroup);
+    result.unshift(todasGroup);
+
+    return result;
+  });
+
   constructor() {
     addIcons({
       camera,
@@ -81,22 +166,22 @@ export class AlbumPage implements OnInit, ViewWillEnter {
       imagesOutline,
       addOutline,
       cameraOutline,
+      heart,
+      heartOutline,
+      folderOutline,
+      folder,
     });
   }
 
   async ngOnInit() {
-    // ionViewWillEnter se encarga de cargar las fotos
+    this.ionViewWillEnter();
   }
 
   async ionViewWillEnter() {
-    // Asegurar que la sesión almacenada ya se cargó antes de pedir las fotos
     await this.authService.isAuthenticated();
     await this.photoService.loadSaved();
   }
 
-  /**
-   * Arrastrar para recargar fotos desde el servidor.
-   */
   async handleRefresh(event: any) {
     try {
       await this.photoService.loadSaved();
@@ -105,100 +190,24 @@ export class AlbumPage implements OnInit, ViewWillEnter {
     }
   }
 
-  /**
-   * Navega a la pantalla de captura de cámara.
-   */
   goToCamera() {
-    this.router.navigate(['/tabs/camera']);
+    this.router.navigate(["/tabs/camera"]);
   }
 
-  /**
-   * Menú contextual de opciones al pulsar una foto.
-   */
-  async showActionSheet(photo: UserPhoto, position: number) {
-    const actionSheet = await this.actionSheetController.create({
-      header: photo.title || 'Opciones de Fotografía',
-      subHeader: photo.created_at ? `Fecha: ${photo.created_at}` : undefined,
-      buttons: [
-        {
-          text: 'Ver Detalles',
-          icon: 'information-circle-outline',
-          handler: () => {
-            this.showPhotoDetails(photo);
-          },
-        },
-        {
-          text: 'Eliminar Foto',
-          role: 'destructive',
-          icon: 'trash',
-          handler: () => {
-            this.confirmDeletePhoto(photo, position);
-          },
-        },
-        {
-          text: 'Cancelar',
-          icon: 'close',
-          role: 'cancel',
-        },
-      ],
+  async openFolder(folder: FolderGroup) {
+    this.router.navigate(["/tabs/album-fotos", folder.folder_id], {
+      queryParams: { folderName: folder.folder_name },
     });
-    await actionSheet.present();
   }
 
-  /**
-   * Muestra el modal con título, descripción y fecha de la foto.
-   */
-  private async showPhotoDetails(photo: UserPhoto) {
-    const alert = await this.alertCtrl.create({
-      header: photo.title || 'Detalles de la Fotografía',
-      subHeader: photo.created_at ? `Subida el: ${photo.created_at}` : undefined,
-      message: photo.description ? photo.description : 'Esta fotografía no cuenta con notas adicionales.',
-      buttons: ['Cerrar'],
-    });
-    await alert.present();
-  }
-
-  /**
-   * Confirma y solicita la eliminación de la foto al backend PHP.
-   */
-  private async confirmDeletePhoto(photo: UserPhoto, position: number) {
-    const alert = await this.alertCtrl.create({
-      header: '¿Eliminar fotografía?',
-      message: 'Esta acción borrará la foto de la base de datos y del servidor permanentemente.',
-      buttons: [
-        {
-          text: 'Cancelar',
-          role: 'cancel',
-        },
-        {
-          text: 'Eliminar',
-          role: 'destructive',
-          handler: async () => {
-            const loading = await this.loadingCtrl.create({
-              message: 'Eliminando fotografía...',
-            });
-            await loading.present();
-
-            try {
-              const res = await this.photoService.deletePhoto(photo, position);
-              this.presentToast(res.message || 'Foto eliminada con éxito.', 'success');
-            } catch (error: any) {
-              this.presentToast(error.message || 'Error al eliminar la foto.', 'danger');
-            } finally {
-              await loading.dismiss();
-            }
-          },
-        },
-      ],
-    });
-    await alert.present();
-  }
-
-  private async presentToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
+  private async presentToast(
+    message: string,
+    color: "success" | "danger" | "warning" = "success",
+  ) {
     const toast = await this.toastCtrl.create({
       message,
       duration: 3000,
-      position: 'bottom',
+      position: "bottom",
       color,
     });
     await toast.present();

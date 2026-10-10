@@ -1,12 +1,12 @@
-/* ==========================================================================
-   Estilos de la pantalla Mis Notas (Ecos-Ionic)
-   ========================================================================== */
-
-/* Barra de búsqueda y categorías */
 .search-toolbar {
   --padding-top: 0;
   --padding-bottom: 4px;
   --min-height: 48px;
+
+  @media (min-width: 768px) {
+    --padding-start: 0%;
+    --padding-end: 0%;
+  }
 
   .custom-searchbar {
     --background: rgba(255, 255, 255, 0.18);
@@ -24,9 +24,9 @@
 
 .category-scroll-container {
   background: var(--ion-color-primary);
-  padding: 0 12px 10px 12px;
   overflow-x: auto;
-  white-space: nowrap;
+  -webkit-overflow-scrolling: touch; 
+  width: 100%; 
 
   &::-webkit-scrollbar {
     display: none;
@@ -34,7 +34,10 @@
 
   .category-chips {
     display: flex;
+    flex-wrap: nowrap;
     gap: 8px;
+    padding: 0 12px 10px 12px; 
+    width: max-content; 
 
     .filter-chip {
       margin: 0;
@@ -42,6 +45,7 @@
       font-size: 0.85rem;
       border-radius: 20px;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+      flex-shrink: 0;
 
       &[outline="true"] {
         --background: rgba(255, 255, 255, 0.2);
@@ -63,7 +67,6 @@
   }
 }
 
-/* Contenido Principal */
 .notes-content {
   --background: var(--ion-background-color, #f8f9fa);
 }
@@ -72,7 +75,6 @@
   padding: 12px 8px 80px 8px;
 }
 
-/* Tarjeta de Nota */
 .note-card {
   position: relative;
   border-radius: 16px;
@@ -197,7 +199,6 @@
   }
 }
 
-/* Estado Vacío */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -239,7 +240,6 @@
   }
 }
 
-/* FAB Flotante */
 .fab-new-note {
   margin-bottom: 16px;
   margin-right: 12px;
@@ -254,7 +254,6 @@
   }
 }
 
-/* Modal del Editor de Notas */
 .note-editor-modal {
   --border-radius: 16px;
 
@@ -295,10 +294,23 @@
       padding: 12px 14px;
       border-radius: 12px;
 
+      @media (min-width: 576px) {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+      }
+
       .category-select-item {
         --background: transparent;
         --padding-start: 0;
         --padding-end: 0;
+        width: 100%;
+        
+        @media (min-width: 576px) {
+          width: auto;
+          flex: 1;
+          margin-right: 20px;
+        }
       }
 
       .color-picker-wrapper {
@@ -341,7 +353,27 @@
 
     .modal-buttons {
       margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      
+      @media (min-width: 576px) {
+        flex-direction: row-reverse;
+        justify-content: flex-start;
+        gap: 12px;
+        
+        ion-button {
+          margin: 0;
+          width: 200px;
+        }
+      }
     }
   }
-}
 
+  @media (min-width: 768px) {
+    --width: 600px;
+    --height: 72vh;
+    --max-height: 80vh;
+    --border-radius: 16px;
+    --box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+}

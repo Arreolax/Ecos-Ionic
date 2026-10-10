@@ -1,9 +1,10 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonContent, ToastController } from '@ionic/angular';
+import { IonContent, ToastController, IonItem, IonIcon } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
+import { Preferences } from '@capacitor/preferences';
 
 declare const paper: any;
 
@@ -11,14 +12,20 @@ declare const paper: any;
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
-  imports: [IonContent, CommonModule, FormsModule],
+  imports: [IonContent, CommonModule, FormsModule, IonItem, IonIcon],
 })
-export class LoginPage implements AfterViewInit {
+export class LoginPage implements OnInit, AfterViewInit {
   @ViewChild('canvasEl', { static: false }) canvasElement!: ElementRef<HTMLCanvasElement>;
 
   // Control de vista Login vs Signup
   isSignup: boolean = false;
   isLoading: boolean = false;
+
+  // Servidor IP
+  serverConfig = {
+    ip: '',
+    port: '3304'
+  };
 
   // Modelos de datos para los formularios
   loginData = {
@@ -50,6 +57,13 @@ export class LoginPage implements AfterViewInit {
     private cdr: ChangeDetectorRef
   ) {}
 
+  async ngOnInit() {
+    const { value } = await Preferences.get({ key: 'serverConfig' });
+    if (value) {
+      this.serverConfig = JSON.parse(value); // Recupera el JSON
+    }
+  }
+
   // Alterna entre la vista de Login y Sign Up
   toggleView(showSignup: boolean) {
     this.isSignup = showSignup;
@@ -73,6 +87,11 @@ export class LoginPage implements AfterViewInit {
       event.preventDefault();
     }
 
+    if (!this.serverConfig.ip.trim() || !this.serverConfig.port.trim()) {
+  await this.showToast('Por favor, ingresa la IP y el Puerto en el panel de Login primero.', 'warning');
+  return;
+}
+
     if (!this.loginData.email.trim() || !this.loginData.password.trim()) {
       await this.showToast('Por favor, ingresa tu correo y contraseña.', 'warning');
       this.isLoading = false;
@@ -82,6 +101,12 @@ export class LoginPage implements AfterViewInit {
 
     this.isLoading = true;
     this.cdr.detectChanges();
+
+    // Guardar IP en preferencias para que los servicios la usen
+    await Preferences.set({ 
+      key: 'serverConfig', 
+      value: JSON.stringify(this.serverConfig) 
+    });
 
     try {
       const response = await this.authService.login(
@@ -114,6 +139,12 @@ export class LoginPage implements AfterViewInit {
     if (event) {
       event.preventDefault();
     }
+    
+    // Validar que se haya ingresado IP si se registra directo desde el panel
+    if (!this.serverConfig.ip.trim() || !this.serverConfig.port.trim()) {
+  await this.showToast('Por favor, ingresa la IP y el Puerto en el panel de Login primero.', 'warning');
+  return;
+}
 
     if (
       !this.registerData.name.trim() ||
@@ -137,6 +168,12 @@ export class LoginPage implements AfterViewInit {
 
     this.isLoading = true;
     this.cdr.detectChanges();
+    
+    // Guardar IP en preferencias
+    await Preferences.set({ 
+      key: 'serverConfig', 
+      value: JSON.stringify(this.serverConfig) 
+    });
 
     try {
       const response = await this.authService.register(

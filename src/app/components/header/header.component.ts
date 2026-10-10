@@ -57,7 +57,7 @@ import { AuthService } from '../../services/auth.service';
   ],
 })
 export class HeaderComponent implements OnInit {
-
+  public triggerId = 'settings-trigger-' + Math.random().toString(36).substring(2, 9);
   public authService = inject(AuthService);
   private router = inject(Router);
 

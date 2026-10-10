@@ -1,9 +1,11 @@
-/* Estilos específicos de Dashboard Diario */
 .dashboard-card {
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   margin-bottom: 20px;
+  height: calc(100% - 20px);
+  display: flex;
+  flex-direction: column;
 }
 
 .dashboard-card:hover, .dashboard-card:active {
@@ -21,6 +23,7 @@
   line-height: 1.5;
   color: var(--ion-color-medium);
   margin-top: 8px;
+  flex-grow: 1; 
 }
 
 .empty-album {
@@ -55,7 +58,6 @@
   }
 }
 
-/* Estilos para la vista previa de notas en el dashboard */
 .note-color-indicator {
   width: 6px;
   height: 40px;

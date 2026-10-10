@@ -80,6 +80,20 @@
               ></ion-textarea>
             </ion-item>
 
+            <ion-item lines="inset" class="form-item ion-margin-top">
+              <ion-select
+                label="Carpeta / Álbum *"
+                labelPlacement="stacked"
+                placeholder="Selecciona una carpeta"
+                [(ngModel)]="selectedFolderId"
+                required="true"
+              >
+                @for (folder of folders; track folder.id) {
+                  <ion-select-option [value]="folder.id">{{ folder.name }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+
             <div class="save-actions ion-margin-top">
               <ion-button (click)="saveToAlbum()" expand="block" shape="round" color="success">
                 <ion-icon slot="start" name="cloud-upload-outline"></ion-icon>

@@ -28,6 +28,11 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'album-fotos',
+    redirectTo: 'tabs/album-fotos',
+    pathMatch: 'full',
+  },
+  {
     path: 'camera',
     redirectTo: 'tabs/camera',
     pathMatch: 'full',

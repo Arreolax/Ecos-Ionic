@@ -6,28 +6,26 @@
     <ion-title>Mis Notas</ion-title>
   </ion-toolbar>
 
-  <!-- Barra de búsqueda -->
   <ion-toolbar color="primary" class="search-toolbar">
     <ion-searchbar
       [(ngModel)]="searchTerm"
-      placeholder="Buscar por título, contenido o etiqueta..."
+      placeholder="Buscar por título o contenido..."
       [debounce]="250"
       show-clear-button="focus"
       class="custom-searchbar"
     ></ion-searchbar>
   </ion-toolbar>
 
-  <!-- Filtro de Categorías -->
   <div class="category-scroll-container">
     <div class="category-chips">
-      @for (cat of categories; track cat) {
+      @for (cat of categories; track cat.id) {
       <ion-chip
-        [outline]="selectedCategory !== cat"
-        [color]="selectedCategory === cat ? 'white' : 'white'"
-        (click)="selectCategory(cat)"
+        [outline]="selectedCategoryId !== cat.id"
+        [color]="selectedCategoryId === cat.id ? 'white' : 'white'"
+        (click)="selectCategory(cat.id)"
         class="filter-chip"
       >
-        <ion-label>{{ cat }}</ion-label>
+        <ion-label>{{ cat.name }}</ion-label>
       </ion-chip>
       }
     </div>
@@ -41,12 +39,10 @@
     </ion-toolbar>
   </ion-header>
 
-  <!-- Pull to Refresh -->
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Estado Vacío -->
   @if (filteredNotes.length === 0) {
   <div class="empty-state">
     <div class="empty-icon-wrapper">
@@ -58,15 +54,15 @@
     <ion-button (click)="searchTerm = ''" fill="outline" size="small" class="ion-margin-top">
       Limpiar búsqueda
     </ion-button>
-    } @else if (selectedCategory !== 'Todas') {
-    <h3>Sin notas en {{ selectedCategory }}</h3>
+    } @else if (selectedCategoryId !== 'todas') {
+    <h3>Sin Notas en {{ getCategoryName(selectedCategoryId) }}</h3>
     <p>Aún no tienes notas guardadas en esta categoría.</p>
     <ion-button (click)="openNewNoteModal()" color="primary" size="small" class="ion-margin-top">
       <ion-icon slot="start" name="add"></ion-icon>
       Crear nota en {{ selectedCategory }}
     </ion-button>
     } @else {
-    <h3>Tu bloc de notas está vacío</h3>
+    <h3>Tu Bloc de Notas está Vacío</h3>
     <p>Escribe tus pensamientos, tareas e ideas importantes para tenerlas siempre a mano.</p>
     <ion-button (click)="openNewNoteModal()" color="primary" class="ion-margin-top" shape="round">
       <ion-icon slot="start" name="add"></ion-icon>
@@ -75,7 +71,6 @@
     }
   </div>
   } @else {
-  <!-- Cuadrícula de Notas -->
   <ion-grid class="notes-grid">
     <ion-row>
       @for (note of filteredNotes; track note.id) {
@@ -94,7 +89,7 @@
                 [style.background-color]="(note.color || '#3880ff') + '22'"
                 [style.color]="note.color || '#3880ff'"
               >
-                {{ note.category }}
+                {{ getCategoryName(note.category_id) }}
               </ion-badge>
 
               <div class="note-actions">
@@ -142,28 +137,20 @@
   </ion-grid>
   }
 
-  <!-- Botón Flotante para Agregar Nota -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="fab-new-note">
     <ion-fab-button (click)="openNewNoteModal()" color="primary">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 
-  <!-- Modal para Crear / Editar Nota -->
   <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeModal()" class="note-editor-modal">
     <ng-template>
       <ion-header>
         <ion-toolbar color="primary">
-          <ion-buttons slot="start">
-            <ion-button (click)="closeModal()">
-              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
-            </ion-button>
-          </ion-buttons>
           <ion-title>{{ isEditing ? 'Editar Nota' : 'Nueva Nota' }}</ion-title>
           <ion-buttons slot="end">
-            <!-- Botón deshabilitado durante guardado -->
-            <ion-button (click)="saveNote()" [strong]="true" [disabled]="isSaving">
-              <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>
+            <ion-button (click)="closeModal()">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
@@ -171,7 +158,6 @@
 
       <ion-content class="modal-content ion-padding">
         <div class="editor-container">
-          <!-- Campo Título -->
           <div class="input-group">
             <ion-item lines="none" class="custom-input-item">
               <ion-input
@@ -182,24 +168,22 @@
             </ion-item>
           </div>
 
-          <!-- Selección de Categoría y Color -->
           <div class="selectors-row">
             <ion-item lines="none" class="category-select-item">
               <ion-select
-                [(ngModel)]="activeNote.category"
+                [(ngModel)]="activeNote.category_id"
                 interface="popover"
                 label="Categoría"
                 labelPlacement="stacked"
               >
-                @for (cat of categories; track cat) {
-                  @if (cat !== 'Todas') {
-                  <ion-select-option [value]="cat">{{ cat }}</ion-select-option>
+                @for (cat of categories; track cat.id) {
+                  @if (cat.id !== 'todas') {
+                  <ion-select-option [value]="cat.id">{{ cat.name }}</ion-select-option>
                   }
                 }
               </ion-select>
             </ion-item>
 
-            <!-- Paleta de Colores -->
             <div class="color-picker-wrapper">
               <label class="color-picker-label">Color distintivo</label>
               <div class="color-palette">
@@ -215,7 +199,6 @@
             </div>
           </div>
 
-          <!-- Campo Contenido -->
           <div class="textarea-group">
             <ion-item lines="none" class="custom-textarea-item">
               <ion-textarea
@@ -228,9 +211,7 @@
             </ion-item>
           </div>
 
-          <!-- Botones de Acción -->
           <div class="modal-buttons ion-margin-top">
-            <!-- Botones deshabilitados durante guardado -->
             <ion-button expand="block" (click)="saveNote()" color="primary" shape="round" [disabled]="isSaving">
               <ion-icon slot="start" name="checkmark-outline"></ion-icon>
               {{ isEditing ? 'Actualizar Nota' : 'Guardar Nota' }}

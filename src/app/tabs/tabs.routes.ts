@@ -1,49 +1,59 @@
-import { Routes } from '@angular/router';
-import { TabsPage } from './tabs.page';
-import { authGuard } from '../guards/auth.guard';
+import { Routes } from "@angular/router";
+import { TabsPage } from "./tabs.page";
+import { authGuard } from "../guards/auth.guard";
 
 export const routes: Routes = [
   {
-    path: 'tabs',
+    path: "tabs",
     component: TabsPage,
     canActivate: [authGuard],
     canActivateChild: [authGuard],
     children: [
       {
-        path: 'dashboard',
-        loadComponent: () => import('../dashboard/dashboard.page').then((m) => m.DashboardPage),
+        path: "dashboard",
+        loadComponent: () =>
+          import("../dashboard/dashboard.page").then((m) => m.DashboardPage),
       },
       {
-        path: 'album',
-        loadComponent: () => import('../album/album.page').then((m) => m.AlbumPage),
+        path: "album",
+        loadComponent: () =>
+          import("../album/album.page").then((m) => m.AlbumPage),
       },
       {
-        path: 'camera',
-        loadComponent: () => import('../camera/camera.page').then((m) => m.CameraPage),
+        path: "album-fotos/:id",
+        loadComponent: () =>
+          import("../album-fotos/album-fotos.page").then((m) => m.FolderPhotosPage),
       },
       {
-        path: 'notes',
-        loadComponent: () => import('../notes/notes.page').then((m) => m.NotesPage),
+        path: "camera",
+        loadComponent: () =>
+          import("../camera/camera.page").then((m) => m.CameraPage),
       },
       {
-        path: 'perfil',
-        loadComponent: () => import('../perfil/perfil.page').then((m) => m.PerfilPage),
+        path: "notes",
+        loadComponent: () =>
+          import("../notes/notes.page").then((m) => m.NotesPage),
       },
       {
-        path: 'login',
-        redirectTo: '/login',
-        pathMatch: 'full',
+        path: "perfil",
+        loadComponent: () =>
+          import("../perfil/perfil.page").then((m) => m.PerfilPage),
       },
       {
-        path: '',
-        redirectTo: '/tabs/dashboard',
-        pathMatch: 'full',
+        path: "login",
+        redirectTo: "/login",
+        pathMatch: "full",
+      },
+      {
+        path: "",
+        redirectTo: "/tabs/dashboard",
+        pathMatch: "full",
       },
     ],
   },
   {
-    path: '',
-    redirectTo: '/tabs/dashboard',
-    pathMatch: 'full',
+    path: "",
+    redirectTo: "/tabs/dashboard",
+    pathMatch: "full",
   },
 ];

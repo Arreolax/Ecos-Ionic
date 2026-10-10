@@ -11,12 +11,12 @@
         <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
       </ion-button>
 
-      <ion-button id="settings-trigger" title="Opciones" shape="round" fill="clear" color="light">
+      <ion-button [id]="triggerId" title="Opciones" shape="round" fill="clear" color="light">
         <ion-icon slot="icon-only" name="person-circle-outline" class="icono-grande"></ion-icon>
       </ion-button>
 
       <ion-popover
-        trigger="settings-trigger"
+        [trigger]="triggerId"
         [dismissOnSelect]="true"
         side="bottom"
         alignment="end"

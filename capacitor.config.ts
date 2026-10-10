@@ -4,6 +4,10 @@ const config: CapacitorConfig = {
   appName: "Ecos",
   npmClient: "npm",
   webDir: "www",
+  server: {
+    cleartext: true,
+    androidScheme: 'http'
+  }
 };
 
 export default config;

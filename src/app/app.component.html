@@ -1,3 +1,7 @@
 <ion-app>
+  <div *ngIf="!networkService.isOnline()" class="offline-banner" role="alert">
+    <ion-icon name="cloud-offline-outline"></ion-icon>
+    <span>Sin conexión a internet. Algunas funciones pueden no responder.</span>
+  </div>
   <ion-router-outlet></ion-router-outlet>
 </ion-app>

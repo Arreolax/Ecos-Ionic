@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { NotesService, Note } from "./notes.service";
+import { NotesService, Note, Category } from "../services/notes.service";
 
 import { AuthService } from '../services/auth.service';
 import {
@@ -111,15 +111,6 @@ export class NotesPage implements OnInit {
   isEditing: boolean = false;
   isSaving: boolean = false; 
 
-  categories: string[] = [
-    "Todas",
-    "Personal",
-    "Ideas",
-    "Trabajo",
-    "Importante",
-    "Diario",
-  ];
-
   availableColors: string[] = [
     "#3880ff", 
     "#2dd36f", 
@@ -129,10 +120,13 @@ export class NotesPage implements OnInit {
     "#ff7961",
   ];
 
+  selectedCategoryId: number | string = "todas"; 
+  categories: Category[] = [{ id: "todas", name: "Todas" }];
+
   activeNote: Partial<Note> = {
     title: "",
     content: "",
-    category: "Personal",
+    category_id: "",
     color: "#3880ff",
   };
 
@@ -193,7 +187,7 @@ export class NotesPage implements OnInit {
     if (usuarioLogeado && usuarioLogeado.id) {
       this.currentUserId = Number(usuarioLogeado.id);
     }
-    
+    this.loadCategories();
     this.loadNotesFromApi();
   }
 
@@ -201,6 +195,17 @@ export class NotesPage implements OnInit {
     this.selectedCategory = "Todas"; 
     this.searchTerm = ""; 
     this.loadNotesFromApi(); 
+  }
+
+  loadCategories() {
+    this.notesService.getCategories().subscribe({
+      next: (data: Category[]) => {
+        if (data && data.length > 0) {
+          this.categories = [{ id: "todas", name: "Todas" }, ...data];
+        }
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadNotesFromApi(event?: any) {
@@ -229,14 +234,16 @@ export class NotesPage implements OnInit {
   get filteredNotes(): Note[] {
     return this.notes
       .filter((note) => {
+        // Compara usando == por si el ID de la BD viene como string y el seleccionado como number
         const matchesCategory =
-          this.selectedCategory === 'Todas' || note.category === this.selectedCategory;
+          this.selectedCategoryId === "todas" || note.category_id == this.selectedCategoryId;
+          
         const query = this.searchTerm.toLowerCase().trim();
         const matchesSearch =
           !query ||
           note.title.toLowerCase().includes(query) ||
-          note.content.toLowerCase().includes(query) ||
-          note.category.toLowerCase().includes(query);
+          note.content.toLowerCase().includes(query); // Quitamos la búsqueda por categoría en texto para simplificar
+          
         return matchesCategory && matchesSearch;
       })
       .sort((a, b) => {
@@ -250,18 +257,28 @@ export class NotesPage implements OnInit {
       });
   }
 
-  selectCategory(category: string) {
-    this.selectedCategory = category;
+  selectCategory(categoryId: number | string) {
+    this.selectedCategoryId = categoryId;
+  }
+
+  getCategoryName(categoryId: number | string): string {
+    const cat = this.categories.find(c => c.id == categoryId);
+    return cat ? cat.name : 'Sin categoría';
   }
 
   openNewNoteModal() {
     this.isEditing = false;
     this.isSaving = false; 
+    
+    // Si estamos en un filtro específico, usa ese ID, si no, usa el primer ID de la BD
+    const defaultCatId = this.selectedCategoryId !== "todas" 
+      ? this.selectedCategoryId 
+      : (this.categories.length > 1 ? this.categories[1].id : 1);
+
     this.activeNote = {
       title: "",
       content: "",
-      category:
-        this.selectedCategory !== "Todas" ? this.selectedCategory : "Personal",
+      category_id: defaultCatId,
       color: this.availableColors[0],
       user_id: this.currentUserId,
       is_pinned: false,
@@ -294,7 +311,7 @@ export class NotesPage implements OnInit {
     const noteToSave = this.activeNote as Note;
     noteToSave.title = noteToSave.title?.trim() || "Sin título";
     noteToSave.content = noteToSave.content.trim();
-    noteToSave.category = noteToSave.category || "Personal";
+    noteToSave.category_id = noteToSave.category_id || (this.categories.length > 1 ? this.categories[1].id : 1);
     noteToSave.color = noteToSave.color || "#3880ff";
 
     this.notesService.saveNote(noteToSave).subscribe({

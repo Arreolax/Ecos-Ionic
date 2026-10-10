@@ -52,7 +52,7 @@
                 color="primary"
                 style="font-size: 3.5rem"
               ></ion-icon>
-              <ion-card-title>Mi Álbum</ion-card-title>
+              <ion-card-title>Mis Fotos</ion-card-title>
               <ion-card-subtitle
                 >Visualiza tus fotos guardadas en el servidor, consulta detalles
                 y administra tu galería.</ion-card-subtitle
@@ -105,21 +105,20 @@
                     />
                   </ion-thumbnail>
                   <ion-label>
-                    <h3 style="font-weight: 600">
-                      {{ photo.title || 'Sin título' }}
-                    </h3>
+                    <div class="note-preview-header">
+                      <h3 style="font-weight: 600; padding-right: 5px;">
+                        {{ photo.title || 'Sin título' }}
+                      </h3>
+                      @if (photo.isFavorite) {
+                      <ion-icon name="heart" style="color: red"></ion-icon>
+                      }
+                    </div>
                     @if (photo.created_at) {
                     <p
                       style="font-size: 0.8rem; color: var(--ion-color-medium)"
                     >
-                    <ion-icon name="time-outline"></ion-icon>
+                      <ion-icon name="time-outline"></ion-icon>
                       {{ photo.created_at }}
-                    </p>
-                    } @else if (photo.description) {
-                    <p
-                      style="font-size: 0.8rem; color: var(--ion-color-medium)"
-                    >
-                      {{ photo.description }}
                     </p>
                     }
                   </ion-label>
@@ -133,7 +132,7 @@
                   routerLink="/tabs/album"
                 >
                   <ion-icon slot="start" name="images-outline"></ion-icon>
-                  Ver Álbum Completo
+                  Ver Todos los Álbumes
                 </ion-button>
               </div>
               }
@@ -151,7 +150,8 @@
               ></ion-icon>
               <ion-card-title>Mis Notas</ion-card-title>
               <ion-card-subtitle
-                >Organiza tus ideas, tareas pendientes y reflexiones personales.</ion-card-subtitle
+                >Organiza tus ideas, tareas pendientes y reflexiones
+                personales.</ion-card-subtitle
               >
             </ion-card-header>
             <ion-card-content>
@@ -170,13 +170,23 @@
               </div>
               } @else if (recentNotes.length === 0) {
               <div class="empty-album ion-text-center ion-padding-vertical">
-                <ion-icon name="book-outline" style="font-size: 2.5rem; color: var(--ion-color-medium);"></ion-icon>
-                <p style="color: var(--ion-color-medium); margin-top: 8px;">Aún no tienes notas guardadas.</p>
+                <ion-icon
+                  name="book-outline"
+                  style="font-size: 2.5rem; color: var(--ion-color-medium)"
+                ></ion-icon>
+                <p style="color: var(--ion-color-medium); margin-top: 8px">
+                  Aún no tienes notas guardadas.
+                </p>
               </div>
               } @else {
               <ion-list lines="inset" class="notes-preview-list">
                 @for (note of recentNotes; track note.id) {
-                <ion-item button routerLink="/tabs/notes" detail="true" class="note-preview-item">
+                <ion-item
+                  button
+                  routerLink="/tabs/notes"
+                  detail="true"
+                  class="note-preview-item"
+                >
                   <div
                     slot="start"
                     class="note-color-indicator"
@@ -184,11 +194,15 @@
                   ></div>
                   <ion-label>
                     <div class="note-preview-header">
-                      <h3 style="font-weight: 600;">
+                      <h3 style="font-weight: 600">
                         {{ note.title || 'Sin título' }}
                       </h3>
                       @if (note.is_pinned) {
-                      <ion-icon name="bookmark" color="warning" style="font-size: 0.9rem; margin-left: 4px;"></ion-icon>
+                      <ion-icon
+                        name="bookmark"
+                        color="warning"
+                        style="font-size: 0.9rem; margin-left: 4px"
+                      ></ion-icon>
                       }
                     </div>
                     <div class="note-preview-meta">
@@ -206,7 +220,6 @@
                       </span>
                       }
                     </div>
-                    <p class="note-content-preview">{{ note.content }}</p>
                   </ion-label>
                 </ion-item>
                 }
@@ -214,7 +227,11 @@
               }
             </ion-card-content>
             <div class="ion-padding-horizontal ion-padding-bottom">
-              <ion-button expand="block" fill="outline" routerLink="/tabs/notes">
+              <ion-button
+                expand="block"
+                fill="outline"
+                routerLink="/tabs/notes"
+              >
                 <ion-icon slot="start" name="book-outline"></ion-icon>
                 Ver Mis Notas
               </ion-button>

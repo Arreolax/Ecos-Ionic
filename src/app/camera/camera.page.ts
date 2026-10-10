@@ -18,6 +18,9 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
+  IonLabel,
+  IonSelect,
+  IonSelectOption,
   LoadingController,
   ToastController,
 } from '@ionic/angular';
@@ -35,6 +38,7 @@ import {
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Photo } from '@capacitor/camera';
 import { PhotoService } from '../services/photo.service';
+import type { Folder } from '../services/photo.service';
 
 @Component({
   selector: 'app-camera',
@@ -58,6 +62,9 @@ import { PhotoService } from '../services/photo.service';
     IonCardContent,
     IonCardHeader,
     IonCardTitle,
+    IonLabel,
+    IonSelect,
+    IonSelectOption,
     RouterLink,
   ],
 })
@@ -72,6 +79,8 @@ export class CameraPage {
 
   public title: string = '';
   public description: string = '';
+  public selectedFolderId: number | null = 3;
+  public folders: Folder[] = [];
 
   constructor() {
     addIcons({
@@ -84,6 +93,13 @@ export class CameraPage {
       checkmarkCircleOutline,
       imagesOutline,
     });
+
+    // Cargar las carpetas al inicializar la página
+    this.loadFolders();
+  }
+
+  private async loadFolders() {
+    this.folders = await this.photoService.getFolders();
   }
 
   /**
@@ -127,6 +143,7 @@ export class CameraPage {
     this.previewUrl.set(null);
     this.title = '';
     this.description = '';
+    this.selectedFolderId = 3;
   }
 
   /**
@@ -149,6 +166,11 @@ export class CameraPage {
       return;
     }
 
+    if (!this.selectedFolderId) {
+      this.presentToast('Por favor selecciona una carpeta para guardar la foto.', 'warning');
+      return;
+    }
+
     const loading = await this.loadingCtrl.create({
       message: 'Guardando fotografía en el servidor...',
     });
@@ -158,7 +180,8 @@ export class CameraPage {
       const res = await this.photoService.uploadCapturedPhoto(
         photo,
         this.title.trim(),
-        this.description.trim()
+        this.description.trim(),
+        this.selectedFolderId
       );
 
       this.presentToast(res.message || 'Fotografía guardada con éxito en tu álbum.', 'success');

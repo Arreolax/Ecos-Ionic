@@ -1,8 +1,9 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterLink  } from '@angular/router';
-import { 
+import { Component, OnInit, ChangeDetectorRef } from "@angular/core";
+import { CameraSource } from '@capacitor/camera';
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { Router, RouterLink } from "@angular/router";
+import {
   IonContent,
   IonHeader,
   IonTitle,
@@ -25,9 +26,9 @@ import {
   IonCol,
   IonPopover,
   IonChip,
-  ViewWillEnter
-} from '@ionic/angular';
-import { addIcons } from 'ionicons';
+  ViewWillEnter,
+} from "@ionic/angular";
+import { addIcons } from "ionicons";
 import {
   personOutline,
   mailOutline,
@@ -45,16 +46,21 @@ import {
   book,
   ellipsisVertical,
   imagesOutline,
-} from 'ionicons/icons';
+  serverOutline,
+  globeOutline,
+  cameraOutline,
+  camera, imageOutline
+} from "ionicons/icons";
 
-import { AuthService } from '../services/auth.service';
-import { PhotoService } from '../services/photo.service';
-import { NotesService } from '../notes/notes.service';
+import { AuthService } from "../services/auth.service";
+import { PhotoService } from "../services/photo.service";
+import { NotesService } from "../services/notes.service";
+import { Preferences } from "@capacitor/preferences";
 
 @Component({
-  selector: 'app-perfil',
-  templateUrl: './perfil.page.html',
-  styleUrls: ['./perfil.page.scss'],
+  selector: "app-perfil",
+  templateUrl: "./perfil.page.html",
+  styleUrls: ["./perfil.page.scss"],
   imports: [
     CommonModule,
     FormsModule,
@@ -78,33 +84,45 @@ import { NotesService } from '../notes/notes.service';
     IonCol,
     IonPopover,
     RouterLink,
-    IonChip
+    IonChip,
   ],
 })
 export class PerfilPage implements OnInit, ViewWillEnter {
   isEditModalOpen: boolean = false;
   isSaving: boolean = false;
   isDeleting: boolean = false;
+  isSavingConfig: boolean = false;
 
   totalPhotos: number = 0;
   totalNotes: number = 0;
 
   editData = {
-    name: '',
-    username: '',
-    email: '',
-    telefono: '',
-    password: '',
+    name: "",
+    username: "",
+    email: "",
+    telefono: "",
+    password: "",
   };
+
+  // Objeto para manejar la IP y puerto desde el Perfil
+  serverConfig = {
+    ip: "",
+    port: "3304",
+  };
+
+  selectedPhotoPreview: string | undefined = undefined;
+  selectedPhotoBlob: Blob | null = null;
+
+  isPhotoSourceModalOpen: boolean = false;
 
   constructor(
     public authService: AuthService,
     private photoService: PhotoService,
-    private notesService: NotesService, 
+    private notesService: NotesService,
     private router: Router,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     addIcons({
       personOutline,
@@ -123,44 +141,98 @@ export class PerfilPage implements OnInit, ViewWillEnter {
       book,
       ellipsisVertical,
       imagesOutline,
+      serverOutline,
+      globeOutline,
+      cameraOutline,
+      camera, imageOutline
     });
   }
 
   ngOnInit() {
     this.loadStats();
+    this.loadServerConfig();
   }
 
   ionViewWillEnter() {
     this.loadStats();
+    this.loadServerConfig();
   }
 
-  async loadStats() {
+  // Cargar la configuración de IP y puerto guardada
+  async loadServerConfig() {
+    const { value } = await Preferences.get({ key: "serverConfig" });
+    if (value) {
+      this.serverConfig = JSON.parse(value);
+      this.cdr.detectChanges();
+    }
+  }
 
+  // Guardar la nueva IP y puerto
+  async saveServerConfig() {
+    if (!this.serverConfig.ip.trim()) {
+      await this.showToast(
+        "La IP del servidor no puede estar vacía.",
+        "warning",
+      );
+      return;
+    }
+
+    this.isSavingConfig = true;
+    this.cdr.detectChanges();
+
+    try {
+      await Preferences.set({
+        key: "serverConfig",
+        value: JSON.stringify(this.serverConfig),
+      });
+      await this.showToast(
+        "Origen de datos guardado correctamente.",
+        "success",
+      );
+    } catch (error) {
+      await this.showToast("Error al guardar la configuración.", "danger");
+    } finally {
+      this.isSavingConfig = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  openPhotoSourceModal() {
+  this.isPhotoSourceModalOpen = true;
+  this.cdr.detectChanges();
+}
+
+closePhotoSourceModal() {
+  this.isPhotoSourceModalOpen = false;
+  this.cdr.detectChanges();
+}
+
+  async loadStats() {
     await this.photoService.loadSaved();
     this.totalPhotos = this.photoService.photos().length;
-
 
     const user = this.authService.currentUser();
     if (user && user.id) {
       this.notesService.getNotes(Number(user.id)).subscribe({
         next: (notes) => {
           this.totalNotes = notes.length;
-          this.cdr.detectChanges(); 
+          this.cdr.detectChanges();
         },
         error: (err) => {
-          console.error('Error al cargar cantidad de notas', err);
+          console.error("Error al cargar cantidad de notas", err);
           this.totalNotes = 0;
           this.cdr.detectChanges();
-        }
+        },
       });
     }
   }
+  
 
-  async showToast(message: string, color: 'success' | 'danger' | 'warning') {
+  async showToast(message: string, color: "success" | "danger" | "warning") {
     const toast = await this.toastCtrl.create({
       message,
       duration: 3500,
-      position: 'top',
+      position: "top",
       color,
     });
     await toast.present();
@@ -171,11 +243,13 @@ export class PerfilPage implements OnInit, ViewWillEnter {
     if (user) {
       this.editData = {
         name: user.name,
-        username: user.username || '',
+        username: user.username || "",
         email: user.email,
-        telefono: user.telefono || '',
-        password: '',
+        telefono: user.telefono || "",
+        password: "",
       };
+      this.selectedPhotoPreview = undefined; // <-- NUEVO
+      this.selectedPhotoBlob = null; // <-- NUEVO
       this.isEditModalOpen = true;
       this.cdr.detectChanges();
     }
@@ -184,6 +258,34 @@ export class PerfilPage implements OnInit, ViewWillEnter {
   closeEditModal() {
     this.isEditModalOpen = false;
     this.cdr.detectChanges();
+  }
+
+  async selectProfilePhoto(sourceType: 'CAMERA' | 'PHOTOS') {
+  this.closePhotoSourceModal(); // Cerramos el modal inmediatamente
+  
+  try {
+    const source = sourceType === 'CAMERA' ? CameraSource.Camera : CameraSource.Photos;
+    const photo = await this.photoService.takePhoto(source); 
+    
+    if (photo) {
+      this.selectedPhotoPreview = photo.webPath || photo.dataUrl;
+      this.selectedPhotoBlob = await this.photoService.getBlobFromPhoto(photo);
+      this.cdr.detectChanges();
+    }
+  } catch (error) {
+    console.error('Error al seleccionar foto', error);
+  }
+}
+
+  // Función para obtener la URL de la foto de perfil en la vista principal
+  getProfilePhotoUrl(user: any): string | null {
+    if (user && user.profile_photo_path) {
+      const ip = this.serverConfig?.ip || 'localhost';
+      const port = this.serverConfig?.port || '80';
+      // Retorna la ruta completa concatenando tu backend
+      return `http://${ip}:${port}/ecos-ionic/${user.profile_photo_path}`;
+    }
+    return null;
   }
 
   async saveProfile() {
@@ -196,7 +298,10 @@ export class PerfilPage implements OnInit, ViewWillEnter {
       !this.editData.email.trim() ||
       !this.editData.telefono.trim()
     ) {
-      await this.showToast('El nombre, usuario, correo y teléfono son obligatorios.', 'warning');
+      await this.showToast(
+        "El nombre, usuario, correo y teléfono son obligatorios.",
+        "warning",
+      );
       return;
     }
 
@@ -210,17 +315,24 @@ export class PerfilPage implements OnInit, ViewWillEnter {
         this.editData.username.trim(),
         this.editData.email.trim(),
         this.editData.telefono.trim(),
-        this.editData.password.trim() || undefined
+        this.editData.password.trim() || undefined,
+        this.selectedPhotoBlob, // <-- NUEVO: Pasamos la imagen
       );
 
       if (response.success) {
         this.closeEditModal();
-        await this.showToast(response.message || 'Perfil actualizado con éxito.', 'success');
+        await this.showToast(
+          response.message || "Perfil actualizado con éxito.",
+          "success",
+        );
       } else {
-        await this.showToast(response.message || 'Error al actualizar perfil.', 'danger');
+        await this.showToast(
+          response.message || "Error al actualizar perfil.",
+          "danger",
+        );
       }
     } catch (error: any) {
-      await this.showToast('Error al conectar con el servidor.', 'danger');
+      await this.showToast("Error al conectar con el servidor.", "danger");
     } finally {
       this.isSaving = false;
       this.cdr.detectChanges();
@@ -232,17 +344,18 @@ export class PerfilPage implements OnInit, ViewWillEnter {
     if (!user) return;
 
     const alert = await this.alertCtrl.create({
-      header: '¿Eliminar cuenta?',
-      subHeader: 'Esta acción es irreversible',
-      message: 'Se borrarán todos tus datos asociados permanentemente. ¿Deseas continuar?',
+      header: "¿Eliminar cuenta?",
+      subHeader: "Esta acción es irreversible",
+      message:
+        "Se borrarán todos tus datos asociados permanentemente. ¿Deseas continuar?",
       buttons: [
         {
-          text: 'Cancelar',
-          role: 'cancel',
+          text: "Cancelar",
+          role: "cancel",
         },
         {
-          text: 'Eliminar',
-          role: 'destructive',
+          text: "Eliminar",
+          role: "destructive",
           handler: () => {
             this.executeDeleteAccount(user.id);
           },
@@ -261,13 +374,16 @@ export class PerfilPage implements OnInit, ViewWillEnter {
       const response = await this.authService.deleteAccount(userId);
 
       if (response.success) {
-        await this.showToast('Cuenta eliminada correctamente.', 'success');
-        this.router.navigate(['/login']);
+        await this.showToast("Cuenta eliminada correctamente.", "success");
+        this.router.navigate(["/login"]);
       } else {
-        await this.showToast(response.message || 'No se pudo eliminar la cuenta.', 'danger');
+        await this.showToast(
+          response.message || "No se pudo eliminar la cuenta.",
+          "danger",
+        );
       }
     } catch (error: any) {
-      await this.showToast('Error al conectar con el servidor.', 'danger');
+      await this.showToast("Error al conectar con el servidor.", "danger");
     } finally {
       this.isDeleting = false;
       this.cdr.detectChanges();
@@ -276,6 +392,6 @@ export class PerfilPage implements OnInit, ViewWillEnter {
 
   async logout() {
     await this.authService.logout();
-    this.router.navigate(['/login']);
+    this.router.navigate(["/login"]);
   }
 }

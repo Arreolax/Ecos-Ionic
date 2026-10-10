@@ -2,9 +2,12 @@ import { Injectable, inject, signal, effect } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Photo } from '@capacitor/camera';
 import { Filesystem } from '@capacitor/filesystem';
-import { Platform } from '@ionic/angular';
+import { Platform, ToastController } from '@ionic/angular';
 import axios from 'axios';
 import { AuthService } from './auth.service';
+import { Preferences } from '@capacitor/preferences';
+
+const AXIOS_TIMEOUT_MS = 10_000;
 
 export interface UserPhoto {
   id?: number | string;
@@ -13,9 +16,12 @@ export interface UserPhoto {
   file_path?: string;
   title?: string | null;
   description?: string | null;
+  folder_id?: number | string; 
+  folder_name?: string | null;
   created_at?: string;
   filepath: string;
   webviewPath?: string;
+  isFavorite?: boolean;
 }
 
 export interface PhotoUploadResponse {
@@ -29,23 +35,24 @@ export interface PhotoDeleteResponse {
   message: string;
 }
 
+export interface Folder {
+  id: number;
+  name: string;
+  description?: string | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class PhotoService {
   private platform = inject(Platform);
   private authService = inject(AuthService);
-
-  private baseUrl = 'http://localhost/ecos-ionic/';
-  private uploadUrl = 'http://localhost/ecos-ionic/upload_photo.php';
-  private getPhotosUrl = 'http://localhost/ecos-ionic/get_photos.php';
-  private deletePhotoUrl = 'http://localhost/ecos-ionic/delete_photo.php';
+  private toastCtrl = inject(ToastController);
 
   public photos = signal<UserPhoto[]>([]);
   public isLoading = signal<boolean>(false);
 
   constructor() {
-    // Si el usuario cierra sesión, limpiar las fotos en memoria
     effect(() => {
       const user = this.authService.currentUser();
       if (!user) {
@@ -54,9 +61,38 @@ export class PhotoService {
     });
   }
 
-  /**
-   * Carga las fotos del usuario actual desde la base de datos MySQL (Backend PHP).
-   */
+  private async getBaseUrl(): Promise<string> {
+    const { value } = await Preferences.get({ key: 'serverConfig' });
+    if (value) {
+      const config = JSON.parse(value);
+      const ip = config.ip || 'localhost';
+      const port = config.port || '80';
+      // Construye la URL uniendo IP y puerto
+      return `http://${ip}:${port}/ecos-ionic`;
+    }
+    // Fallback de seguridad
+    return 'http://localhost/ecos-ionic';
+  }
+
+  public async getFolders(): Promise<Folder[]> {
+    try {
+      const baseUrl = await this.getBaseUrl();
+      const response = await axios.get<{ success: boolean; data: Folder[] }>(
+        `${baseUrl}/get_folders.php`,
+        { timeout: AXIOS_TIMEOUT_MS }
+      );
+
+      if (response.data && response.data.success && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      return [];
+    } catch (error: any) {
+      console.error('Error al cargar carpetas:', error);
+      await this.showToast('No se pudieron cargar las carpetas.', 'warning');
+      return [];
+    }
+  }
+
   public async loadSaved(): Promise<void> {
     let user = this.authService.currentUser();
     if (!user) {
@@ -72,8 +108,10 @@ export class PhotoService {
     this.isLoading.set(true);
 
     try {
+      const baseUrl = await this.getBaseUrl();
       const response = await axios.get<{ success: boolean; data: any[]; message?: string }>(
-        `${this.getPhotosUrl}?user_id=${encodeURIComponent(user.id)}`
+        `${baseUrl}/get_photos.php?user_id=${encodeURIComponent(user.id)}`,
+        { timeout: AXIOS_TIMEOUT_MS }
       );
 
       if (response.data && response.data.success && Array.isArray(response.data.data)) {
@@ -81,7 +119,7 @@ export class PhotoService {
           const filePath = item.file_path || '';
           const fullWebviewPath = filePath.startsWith('http')
             ? filePath
-            : `${this.baseUrl}${filePath}`;
+            : `${baseUrl}/${filePath}`;
 
           return {
             id: item.id,
@@ -90,9 +128,12 @@ export class PhotoService {
             file_path: filePath,
             title: item.title ?? null,
             description: item.description ?? null,
+            folder_id: item.folder_id ?? null,     
+            folder_name: item.folder_name ?? null, 
             created_at: item.created_at,
             filepath: filePath,
             webviewPath: fullWebviewPath,
+            isFavorite: Number(item.favorite) === 1
           };
         });
 
@@ -100,21 +141,24 @@ export class PhotoService {
       } else {
         this.photos.set([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al cargar fotos desde el servidor:', error);
+      const msg = error.code === 'ECONNABORTED'
+        ? 'La carga de fotos tardó demasiado. Verifica tu conexión.'
+        : 'No se pudieron cargar las fotos. Verifica tu conexión.';
+      await this.showToast(msg, 'warning');
+      this.photos.set([]);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  /**
-   * Abre la cámara del dispositivo para capturar una foto.
-   */
-  public async takePhoto(): Promise<Photo | null> {
+  // Modifica la función para recibir el parámetro 'source'
+  public async takePhoto(source: CameraSource = CameraSource.Camera): Promise<Photo | null> {
     try {
       const photo = await Camera.getPhoto({
         resultType: CameraResultType.Uri,
-        source: CameraSource.Camera,
+        source: source, // <-- Usa el parámetro dinámico aquí
         quality: 90,
       });
       return photo;
@@ -126,13 +170,11 @@ export class PhotoService {
     }
   }
 
-  /**
-   * Sube la foto capturada al backend en PHP vinculándola al usuario actual.
-   */
   public async uploadCapturedPhoto(
     photo: Photo,
     title: string,
-    description: string
+    description: string,
+    folderId: number
   ): Promise<PhotoUploadResponse> {
     const user = this.authService.currentUser();
     if (!user || !user.id) {
@@ -147,6 +189,10 @@ export class PhotoService {
       throw new Error('La descripción de la fotografía es obligatoria.');
     }
 
+    if (!folderId) {
+      throw new Error('Debes seleccionar una carpeta para la fotografía.');
+    }
+
     const blob = await this.getBlobFromPhoto(photo);
     const formData = new FormData();
     const fileName = `photo_${Date.now()}.jpg`;
@@ -155,13 +201,17 @@ export class PhotoService {
     formData.append('user_id', String(user.id));
     formData.append('title', title.trim());
     formData.append('description', description.trim());
+    formData.append('folder_id', String(folderId));
 
     try {
-      // Axios con FormData detecta y añade automáticamente los boundaries multipart correctos
-      const response = await axios.post<PhotoUploadResponse>(this.uploadUrl, formData);
+      const baseUrl = await this.getBaseUrl();
+      const response = await axios.post<PhotoUploadResponse>(
+        `${baseUrl}/upload_photo.php`,
+        formData,
+        { timeout: 30_000 }
+      );
 
       if (response.data && response.data.success) {
-        // Recargar las fotos desde el servidor para obtener el nuevo ID y fecha
         await this.loadSaved();
         return response.data;
       } else {
@@ -176,23 +226,18 @@ export class PhotoService {
     }
   }
 
-  /**
-   * Captura y sube directamente una foto a la galería del usuario.
-   */
   public async addNewToGallery(
     title: string,
-    description: string
+    description: string,
+    folderId: number
   ): Promise<PhotoUploadResponse | null> {
     const photo = await this.takePhoto();
     if (!photo) {
       return null;
     }
-    return await this.uploadCapturedPhoto(photo, title, description);
+    return await this.uploadCapturedPhoto(photo, title, description, folderId);
   }
 
-  /**
-   * Elimina la foto tanto de la base de datos MySQL como del disco del servidor PHP.
-   */
   public async deletePhoto(photo: UserPhoto, position?: number): Promise<PhotoDeleteResponse> {
     const user = this.authService.currentUser();
     if (!user || !user.id) {
@@ -204,21 +249,20 @@ export class PhotoService {
     }
 
     try {
+      const baseUrl = await this.getBaseUrl();
       const response = await axios.post<PhotoDeleteResponse>(
-        this.deletePhotoUrl,
+        `${baseUrl}/delete_photo.php`,
         {
           photo_id: photo.id,
           user_id: user.id,
         },
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
+          timeout: AXIOS_TIMEOUT_MS,
         }
       );
 
       if (response.data && response.data.success) {
-        // Actualizar el signal reactivo eliminando la foto
         this.photos.update((photos) => photos.filter((p) => p.id !== photo.id));
         return response.data;
       } else {
@@ -233,9 +277,6 @@ export class PhotoService {
     }
   }
 
-  /**
-   * Convierte la foto de Capacitor a un Blob listo para FormData.
-   */
   public async getBlobFromPhoto(photo: Photo): Promise<Blob> {
     if (photo.webPath) {
       try {
@@ -259,9 +300,6 @@ export class PhotoService {
     throw new Error('No se pudo convertir la imagen capturada para subirla.');
   }
 
-  /**
-   * Convierte base64 a Blob binario.
-   */
   private b64toBlob(b64Data: string, contentType = 'image/jpeg', sliceSize = 512): Blob {
     const cleanB64 = b64Data.includes(',') ? b64Data.split(',')[1] : b64Data;
     const byteCharacters = atob(cleanB64);
@@ -280,10 +318,82 @@ export class PhotoService {
     return new Blob(byteArrays as any[], { type: contentType });
   }
 
-  /**
-   * Limpia manualmente las fotos cargadas en el estado del cliente.
-   */
   public clearPhotos(): void {
     this.photos.set([]);
+  }
+
+  public async updateFavorite(photo: UserPhoto): Promise<any> {
+    try {
+      const baseUrl = await this.getBaseUrl();
+      const response = await axios.post(
+        `${baseUrl}/update_photo.php`,
+        {
+          id: photo.id,                     
+          user_id: photo.user_id,           
+          folder_id: photo.folder_id,       
+          title: photo.title,               
+          description: photo.description,   
+          favorite: photo.isFavorite ? 1 : 0 
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 10000,
+        }
+      );
+
+      if (response.data && response.data.success) {
+        return response.data;
+      } else {
+        throw new Error(response.data?.message || 'Error al actualizar favorito.');
+      }
+    } catch (error: any) {
+      const msg = error.response?.data?.message || error.message || 'Error de conexión.';
+      throw new Error(msg);
+    }
+  }
+
+  public async updatePhoto(photo: UserPhoto): Promise<any> {
+  try {
+    const baseUrl = await this.getBaseUrl();
+    const response = await axios.post(
+      `${baseUrl}/update_photo.php`,
+      {
+        id: photo.id,                     
+        user_id: photo.user_id,           
+        folder_id: photo.folder_id,       
+        title: photo.title,               
+        description: photo.description,   
+        favorite: photo.isFavorite ? 1 : 0 
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 10000,
+      }
+    );
+
+    if (response.data && response.data.success) {
+      return response.data;
+    } else {
+      throw new Error(response.data?.message || 'Error al actualizar los datos de la foto.');
+    }
+  } catch (error: any) {
+    const msg = error.response?.data?.message || error.message || 'Error de conexión.';
+    throw new Error(msg);
+  }
+}
+
+
+  private async showToast(message: string, color: 'success' | 'warning' | 'danger' = 'warning'): Promise<void> {
+    try {
+      const toast = await this.toastCtrl.create({
+        message,
+        duration: 3500,
+        position: 'top',
+        color,
+      });
+      await toast.present();
+    } catch (e) {
+      console.warn('No se pudo presentar el Toast:', e);
+    }
   }
 }

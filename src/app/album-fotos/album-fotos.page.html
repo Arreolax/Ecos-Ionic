@@ -1,0 +1,148 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button
+        defaultHref="/tabs/album"
+        title="Volver"
+      ></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ folderName }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">{{ folderName }}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  @if (photoService.isLoading()) {
+  <div class="empty-state ion-text-center ion-padding">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando fotos...</p>
+  </div>
+  } @else if (folderPhotos().length === 0) {
+  <div class="empty-state ion-text-center ion-padding">
+    <ion-icon name="images-outline"></ion-icon>
+    <h3>Carpeta Vacía</h3>
+    <p>No hay fotografías en esta carpeta.</p>
+  </div>
+  } @else {
+  <ion-grid class="photos-grid">
+    <ion-row>
+      @for (photo of folderPhotos(); track photo.id ?? photo.file_name) {
+      <ion-col size="4" size-md="3" size-lg="2">
+        <div class="photo-card" (click)="showActionSheet(photo)">
+          <div class="image-wrapper">
+            <img
+              [src]="photo.webviewPath"
+              [alt]="photo.title || 'Foto'"
+              loading="lazy"
+            />
+            <button
+              type="button"
+              class="favorite-btn"
+              [class.active]="photo.isFavorite"
+              (click)="toggleFavorite(photo, $event)"
+            >
+              <ion-icon
+                [name]="photo.isFavorite ? 'heart' : 'heart-outline'"
+              ></ion-icon>
+            </button>
+          </div>
+
+          <div class="photo-header-row">
+            @if (photo.title) {
+            <div class="photo-info">
+              <span class="photo-label">Título:</span>
+              <span class="photo-title">{{ photo.title }}</span>
+            </div>
+            } @if (photo.created_at) {
+            <div class="photo-info">
+              <span class="photo-label">Guardada:</span>
+              <span class="date-info">{{ photo.created_at }}</span>
+            </div>
+            }
+          </div>
+
+          <div class="photo-header-row">
+            @if (photo.description) {
+            <div class="photo-info">
+              <span class="photo-label">Descripción:</span>
+              <span class="photo-description">{{ photo.description }}</span>
+            </div>
+            } @if (showFolderName(photo.folder_id)) {
+            <div class="photo-info">
+              <span class="photo-label">Carpeta:</span>
+              <span class="date-info">{{ photo.folder_name }}</span>
+            </div>
+            }
+          </div>
+        </div>
+      </ion-col>
+      }
+    </ion-row>
+  </ion-grid>
+  }
+
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="primary">
+          <ion-title>Editar Fotografía</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeEditModal()">Cerrar</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      
+      <ion-content class="ion-padding">
+        
+        @if (editData.webviewPath) {
+        <div class="ion-text-center ion-margin-bottom">
+          <img 
+            [src]="editData.webviewPath" 
+            [alt]="editData.title || 'Foto a editar'" 
+            style="max-height: 250px; border-radius: 12px; object-fit: contain; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" 
+          />
+        </div>
+        }
+
+        <ion-item>
+          <ion-label position="stacked">Título</ion-label>
+          <ion-input type="text" [(ngModel)]="editData.title" placeholder="Ej. Mi foto de vacaciones"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Descripción</ion-label>
+          <ion-textarea [(ngModel)]="editData.description" placeholder="Escribe un detalle de la imagen..."></ion-textarea>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Carpeta</ion-label>
+          <ion-select [(ngModel)]="editData.folder_id" interface="action-sheet" placeholder="Selecciona una carpeta">
+            @for (folder of availableFolders; track folder.id) {
+              <ion-select-option [value]="folder.id">{{ folder.name }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+      </ion-content>
+
+      <ion-footer>
+        <ion-toolbar>
+          <div class="ion-padding">
+            <ion-button expand="block" (click)="savePhotoEdits()">
+              Guardar Cambios
+            </ion-button>
+          </div>
+        </ion-toolbar>
+      </ion-footer>
+
+    </ng-template>
+  </ion-modal>
+</ion-content>

@@ -39,10 +39,11 @@ import {
   bookmarkOutline,
   bookmark,
   timeOutline,
+  heart,
 } from 'ionicons/icons';
 import { AuthService } from '../services/auth.service';
 import { PhotoService, UserPhoto } from '../services/photo.service';
-import { NotesService, Note } from '../notes/notes.service';
+import { NotesService, Note } from '../services/notes.service';
 
 import { HeaderComponent } from '../components/header/header.component';
 
@@ -102,6 +103,7 @@ export class DashboardPage implements OnInit, ViewWillEnter {
       bookmarkOutline,
       bookmark,
       timeOutline,
+      heart,
     });
   }
 
