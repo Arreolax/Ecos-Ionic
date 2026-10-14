@@ -35,3 +35,25 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 /* @import "@ionic/angular/css/palettes/dark.system.css"; */    //Modo OScuro
+
+/* ─── Custom Loading Modal ─── */
+ion-loading.custom-loading {
+  --background: rgba(255, 255, 255, 0.95);
+  --spinner-color: var(--ion-color-primary);
+
+  .loading-wrapper {
+    border-radius: 16px;
+    padding: 24px 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+
+    .loading-content {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--ion-color-dark);
+    }
+  }
+}

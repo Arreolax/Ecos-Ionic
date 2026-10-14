@@ -2,7 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { NotesService, Note, Category } from "../services/notes.service";
-
+import { LoadingService } from "../services/loading.service";
 import { AuthService } from '../services/auth.service';
 import {
   IonContent,
@@ -100,6 +100,7 @@ export class NotesPage implements OnInit {
   private alertCtrl = inject(AlertController);
   private notesService = inject(NotesService);
   private cdr = inject(ChangeDetectorRef);
+  private loadingService = inject(LoadingService);
 
   private authService = inject(AuthService);
 
@@ -132,32 +133,31 @@ export class NotesPage implements OnInit {
 
   notes: Note[] = [];
 
-  togglePin(note: Note, event?: Event) {
+  async togglePin(note: Note, event?: Event) {
     if (event) event.stopPropagation();
     
     note.is_pinned = !note.is_pinned;
-    
     this.cdr.detectChanges(); 
     
+    await this.loadingService.show(note.is_pinned ? 'Fijando nota...' : 'Desfijando nota...');
+
     this.notesService.saveNote(note).subscribe({
-      next: (res: any) => {
+      next: async (res: any) => {
         if (res.success === true || res.status === 'success') {
           this.loadNotesFromApi(); 
-          
           const mensaje = note.is_pinned ? 'Nota fijada' : 'Nota desfijada';
-          this.showToast(mensaje, 'success');
+          await this.loadingService.dismissWithResult(mensaje, true);
         } else {
           note.is_pinned = !note.is_pinned;
           this.cdr.detectChanges();
-          this.showToast(res.message || 'No se pudo cambiar el estado de la nota.', 'danger');
+          await this.loadingService.dismissWithResult(res.message || 'No se pudo cambiar el estado de la nota.', false);
         }
       },
-      error: (err) => {
+      error: async (err) => {
         note.is_pinned = !note.is_pinned;
         this.cdr.detectChanges();
-        
         console.error('Error al fijar la nota', err);
-        this.showToast('Error de conexión al intentar cambiar el estado.', 'danger');
+        await this.loadingService.dismissWithResult('Error de conexión al intentar cambiar el estado.', false);
       }
     });
   }
@@ -314,27 +314,29 @@ export class NotesPage implements OnInit {
     noteToSave.category_id = noteToSave.category_id || (this.categories.length > 1 ? this.categories[1].id : 1);
     noteToSave.color = noteToSave.color || "#3880ff";
 
+    await this.loadingService.show('Guardando nota...');
+
     this.notesService.saveNote(noteToSave).subscribe({
-      next: (res: any) => {
+      next: async (res: any) => {
         this.isSaving = false;
 
         if (res.success === true || res.status === "success") {
           this.closeModal();
+          await this.loadingService.dismissWithResult(res.message || "Nota guardada.", true);
 
           setTimeout(() => {
             this.loadNotesFromApi();
-            this.showToast(res.message || "Nota guardada.", "success");
           }, 150);
         } else {
-          this.showToast(res.message || "Fallo interno en la API.", "danger");
+          await this.loadingService.dismissWithResult(res.message || "Fallo interno en la API.", false);
         }
       },
-      error: (err) => {
+      error: async (err) => {
         this.isSaving = false;
         console.error("Error al comunicarse con la API:", err);
         const errorMessage =
           err.error?.message || err.message || "Error de servidor.";
-        this.showToast(`Error: ${errorMessage}`, "danger");
+        await this.loadingService.dismissWithResult(`Error: ${errorMessage}`, false);
       },
     });
   }
@@ -367,25 +369,26 @@ export class NotesPage implements OnInit {
         {
           text: "Eliminar",
           role: "destructive",
-          handler: () => {
+          handler: async () => {
             if (note.id) {
+              await this.loadingService.show('Eliminando nota...');
               this.notesService
                 .deleteNote(note.id, this.currentUserId)
                 .subscribe({
-                  next: (res: any) => {
+                  next: async (res: any) => {
                     if (res.success === true || res.status === "success") {
                       this.loadNotesFromApi(); 
-                      this.showToast("Nota eliminada", "medium");
+                      await this.loadingService.dismissWithResult("Nota eliminada", true);
                     } else {
-                      this.showToast(
+                      await this.loadingService.dismissWithResult(
                         res.message || "No se pudo eliminar la nota.",
-                        "danger",
+                        false,
                       );
                     }
                   },
-                  error: (err) => {
+                  error: async (err) => {
                     console.error("Error al eliminar", err);
-                    this.showToast("Ocurrió un error al eliminar.", "danger");
+                    await this.loadingService.dismissWithResult("Ocurrió un error al eliminar.", false);
                   },
                 });
             }

@@ -44,6 +44,7 @@ import {
 import type { UserPhoto, Folder } from "../services/photo.service";
 import { PhotoService } from "../services/photo.service";
 import { AuthService } from "../services/auth.service";
+import { LoadingService } from "../services/loading.service";
 
 @Component({
   selector: "app-album-fotos",
@@ -76,6 +77,7 @@ export class FolderPhotosPage implements OnInit, ViewWillEnter {
   private alertCtrl = inject(AlertController);
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
+  private loadingService = inject(LoadingService);
   private cdr = inject(ChangeDetectorRef);
 
   public isEditModalOpen = false;
@@ -229,10 +231,7 @@ export class FolderPhotosPage implements OnInit, ViewWillEnter {
   }
 
   public async savePhotoEdits() {
-    const loading = await this.loadingCtrl.create({
-      message: "Guardando cambios...",
-    });
-    await loading.present();
+    await this.loadingService.show("Guardando cambios...");
     
     try {
       await this.photoService.updatePhoto(this.editData as UserPhoto);
@@ -240,11 +239,9 @@ export class FolderPhotosPage implements OnInit, ViewWillEnter {
       this.closeEditModal();
       await this.photoService.loadSaved();
       
-      this.presentToast("Fotografía actualizada con éxito.", "success");
+      await this.loadingService.dismissWithResult("Fotografía actualizada con éxito.", true);
     } catch (error: any) {
-      this.presentToast(error.message || "Error al actualizar.", "danger");
-    } finally {
-      await loading.dismiss();
+      await this.loadingService.dismissWithResult(error.message || "Error al actualizar.", false);
     }
   }
 
@@ -258,23 +255,18 @@ export class FolderPhotosPage implements OnInit, ViewWillEnter {
           text: "Eliminar",
           role: "destructive",
           handler: async () => {
-            const loading = await this.loadingCtrl.create({
-              message: "Eliminando...",
-            });
-            await loading.present();
+            await this.loadingService.show("Eliminando fotografía...");
             try {
               const res = await this.photoService.deletePhoto(photo);
-              this.presentToast(
+              await this.loadingService.dismissWithResult(
                 res.message || "Foto eliminada con éxito.",
-                "success",
+                true,
               );
             } catch (error: any) {
-              this.presentToast(
+              await this.loadingService.dismissWithResult(
                 error.message || "Error al eliminar.",
-                "danger",
+                false,
               );
-            } finally {
-              await loading.dismiss();
             }
           },
         },

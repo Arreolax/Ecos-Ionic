@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { IonContent, ToastController, IonItem, IonIcon } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
+import { LoadingService } from '../services/loading.service';
 import { Preferences } from '@capacitor/preferences';
 
 declare const paper: any;
@@ -54,7 +55,8 @@ export class LoginPage implements OnInit, AfterViewInit {
     private authService: AuthService,
     private router: Router,
     private toastCtrl: ToastController,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private loadingService: LoadingService
   ) {}
 
   async ngOnInit() {
@@ -88,14 +90,12 @@ export class LoginPage implements OnInit, AfterViewInit {
     }
 
     if (!this.serverConfig.ip.trim() || !this.serverConfig.port.trim()) {
-  await this.showToast('Por favor, ingresa la IP y el Puerto en el panel de Login primero.', 'warning');
-  return;
-}
+      await this.showToast('Por favor, ingresa la IP y el Puerto en el panel de Login primero.', 'warning');
+      return;
+    }
 
     if (!this.loginData.email.trim() || !this.loginData.password.trim()) {
       await this.showToast('Por favor, ingresa tu correo y contraseña.', 'warning');
-      this.isLoading = false;
-      this.cdr.detectChanges();
       return;
     }
 
@@ -108,6 +108,8 @@ export class LoginPage implements OnInit, AfterViewInit {
       value: JSON.stringify(this.serverConfig) 
     });
 
+    await this.loadingService.show('Iniciando sesión...');
+
     try {
       const response = await this.authService.login(
         this.loginData.email.trim(),
@@ -115,19 +117,13 @@ export class LoginPage implements OnInit, AfterViewInit {
       );
 
       if (response.success) {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-        await this.showToast(response.message || 'Login exitoso.', 'success');
+        await this.loadingService.dismissWithResult(response.message || 'Login exitoso.', true);
         this.router.navigate(['/tabs/dashboard']);
       } else {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-        await this.showToast(response.message || 'Credenciales incorrectas.', 'danger');
+        await this.loadingService.dismissWithResult(response.message || 'Credenciales incorrectas.', false);
       }
     } catch (error: any) {
-      this.isLoading = false;
-      this.cdr.detectChanges();
-      await this.showToast('Error al procesar la solicitud de inicio de sesión.', 'danger');
+      await this.loadingService.dismissWithResult('Error al procesar la solicitud de inicio de sesión.', false);
     } finally {
       this.isLoading = false;
       this.cdr.detectChanges();
@@ -142,9 +138,9 @@ export class LoginPage implements OnInit, AfterViewInit {
     
     // Validar que se haya ingresado IP si se registra directo desde el panel
     if (!this.serverConfig.ip.trim() || !this.serverConfig.port.trim()) {
-  await this.showToast('Por favor, ingresa la IP y el Puerto en el panel de Login primero.', 'warning');
-  return;
-}
+      await this.showToast('Por favor, ingresa la IP y el Puerto en el panel de Login primero.', 'warning');
+      return;
+    }
 
     if (
       !this.registerData.name.trim() ||
@@ -154,15 +150,11 @@ export class LoginPage implements OnInit, AfterViewInit {
       !this.registerData.password.trim()
     ) {
       await this.showToast('Por favor, completa todos los campos requeridos.', 'warning');
-      this.isLoading = false;
-      this.cdr.detectChanges();
       return;
     }
 
     if (!this.registerData.terms) {
       await this.showToast('Debes aceptar los Términos de Servicio para registrarte.', 'warning');
-      this.isLoading = false;
-      this.cdr.detectChanges();
       return;
     }
 
@@ -174,6 +166,8 @@ export class LoginPage implements OnInit, AfterViewInit {
       key: 'serverConfig', 
       value: JSON.stringify(this.serverConfig) 
     });
+
+    await this.loadingService.show('Registrando usuario...');
 
     try {
       const response = await this.authService.register(
@@ -190,18 +184,12 @@ export class LoginPage implements OnInit, AfterViewInit {
         this.loginData.email = this.registerData.email;
         this.loginData.password = this.registerData.password;
         this.toggleView(false);
-        this.isLoading = false;
-        this.cdr.detectChanges();
-        await this.showToast(response.message || 'Usuario registrado exitosamente.', 'success');
+        await this.loadingService.dismissWithResult(response.message || 'Usuario registrado exitosamente.', true);
       } else {
-        this.isLoading = false;
-        this.cdr.detectChanges();
-        await this.showToast(response.message || 'Error en el registro.', 'danger');
+        await this.loadingService.dismissWithResult(response.message || 'Error en el registro.', false);
       }
     } catch (error: any) {
-      this.isLoading = false;
-      this.cdr.detectChanges();
-      await this.showToast('Error al procesar la solicitud de registro.', 'danger');
+      await this.loadingService.dismissWithResult('Error al procesar la solicitud de registro.', false);
     } finally {
       this.isLoading = false;
       this.cdr.detectChanges();

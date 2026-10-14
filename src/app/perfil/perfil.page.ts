@@ -27,6 +27,7 @@ import {
   IonPopover,
   IonChip,
   ViewWillEnter,
+  IonFooter,
 } from "@ionic/angular";
 import { addIcons } from "ionicons";
 import {
@@ -55,6 +56,7 @@ import {
 import { AuthService } from "../services/auth.service";
 import { PhotoService } from "../services/photo.service";
 import { NotesService } from "../services/notes.service";
+import { LoadingService } from "../services/loading.service";
 import { Preferences } from "@capacitor/preferences";
 
 @Component({
@@ -85,6 +87,7 @@ import { Preferences } from "@capacitor/preferences";
     IonPopover,
     RouterLink,
     IonChip,
+    IonFooter,
   ],
 })
 export class PerfilPage implements OnInit, ViewWillEnter {
@@ -123,6 +126,7 @@ export class PerfilPage implements OnInit, ViewWillEnter {
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
     private cdr: ChangeDetectorRef,
+    private loadingService: LoadingService,
   ) {
     addIcons({
       personOutline,
@@ -180,17 +184,19 @@ export class PerfilPage implements OnInit, ViewWillEnter {
     this.isSavingConfig = true;
     this.cdr.detectChanges();
 
+    await this.loadingService.show('Guardando configuración...');
+
     try {
       await Preferences.set({
         key: "serverConfig",
         value: JSON.stringify(this.serverConfig),
       });
-      await this.showToast(
+      await this.loadingService.dismissWithResult(
         "Origen de datos guardado correctamente.",
-        "success",
+        true,
       );
     } catch (error) {
-      await this.showToast("Error al guardar la configuración.", "danger");
+      await this.loadingService.dismissWithResult("Error al guardar la configuración.", false);
     } finally {
       this.isSavingConfig = false;
       this.cdr.detectChanges();
@@ -308,6 +314,8 @@ closePhotoSourceModal() {
     this.isSaving = true;
     this.cdr.detectChanges();
 
+    await this.loadingService.show('Guardando perfil...');
+
     try {
       const response = await this.authService.updateProfile(
         user.id,
@@ -321,18 +329,18 @@ closePhotoSourceModal() {
 
       if (response.success) {
         this.closeEditModal();
-        await this.showToast(
+        await this.loadingService.dismissWithResult(
           response.message || "Perfil actualizado con éxito.",
-          "success",
+          true,
         );
       } else {
-        await this.showToast(
+        await this.loadingService.dismissWithResult(
           response.message || "Error al actualizar perfil.",
-          "danger",
+          false,
         );
       }
     } catch (error: any) {
-      await this.showToast("Error al conectar con el servidor.", "danger");
+      await this.loadingService.dismissWithResult("Error al conectar con el servidor.", false);
     } finally {
       this.isSaving = false;
       this.cdr.detectChanges();
@@ -370,20 +378,22 @@ closePhotoSourceModal() {
     this.isDeleting = true;
     this.cdr.detectChanges();
 
+    await this.loadingService.show('Eliminando cuenta...');
+
     try {
       const response = await this.authService.deleteAccount(userId);
 
       if (response.success) {
-        await this.showToast("Cuenta eliminada correctamente.", "success");
+        await this.loadingService.dismissWithResult("Cuenta eliminada correctamente.", true);
         this.router.navigate(["/login"]);
       } else {
-        await this.showToast(
+        await this.loadingService.dismissWithResult(
           response.message || "No se pudo eliminar la cuenta.",
-          "danger",
+          false,
         );
       }
     } catch (error: any) {
-      await this.showToast("Error al conectar con el servidor.", "danger");
+      await this.loadingService.dismissWithResult("Error al conectar con el servidor.", false);
     } finally {
       this.isDeleting = false;
       this.cdr.detectChanges();

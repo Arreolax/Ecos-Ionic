@@ -9,6 +9,7 @@ import { timeout, catchError } from 'rxjs/operators';
 import { throwError, TimeoutError } from 'rxjs';
 import { ToastController } from '@ionic/angular';
 import { NetworkService } from '../services/network.service';
+import { LoadingService } from '../services/loading.service';
 
 /** Tiempo máximo de espera por petición HTTP (ms) */
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -19,6 +20,7 @@ export const httpErrorInterceptor: HttpInterceptorFn = (
 ) => {
   const toastCtrl = inject(ToastController);
   const networkService = inject(NetworkService);
+  const loadingService = inject(LoadingService);
 
   // Bloquear petición si no hay red
   if (!networkService.isOnline()) {
@@ -56,6 +58,7 @@ export const httpErrorInterceptor: HttpInterceptorFn = (
         }
       }
 
+      loadingService.dismiss();
       showToast(toastCtrl, message, 'danger');
       return throwError(() => error);
     })

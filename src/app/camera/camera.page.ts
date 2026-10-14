@@ -39,6 +39,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Photo } from '@capacitor/camera';
 import { PhotoService } from '../services/photo.service';
 import type { Folder } from '../services/photo.service';
+import { LoadingService } from '../services/loading.service';
 
 @Component({
   selector: 'app-camera',
@@ -73,6 +74,7 @@ export class CameraPage {
   private router = inject(Router);
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
+  private loadingService = inject(LoadingService);
 
   public capturedPhoto = signal<Photo | null>(null);
   public previewUrl = signal<string | null>(null);
@@ -171,10 +173,7 @@ export class CameraPage {
       return;
     }
 
-    const loading = await this.loadingCtrl.create({
-      message: 'Guardando fotografía en el servidor...',
-    });
-    await loading.present();
+    await this.loadingService.show('Guardando fotografía en el servidor...');
 
     try {
       const res = await this.photoService.uploadCapturedPhoto(
@@ -184,14 +183,18 @@ export class CameraPage {
         this.selectedFolderId
       );
 
-      this.presentToast(res.message || 'Fotografía guardada con éxito en tu álbum.', 'success');
       this.discardPhoto();
+      await this.loadingService.dismissWithResult(
+        res.message || 'Fotografía guardada con éxito en tu álbum.',
+        true
+      );
       // Redirigir a la pantalla de Álbum para ver la nueva foto
       this.router.navigate(['/tabs/album']);
     } catch (error: any) {
-      this.presentToast(error.message || 'Error al guardar la fotografía en el servidor.', 'danger');
-    } finally {
-      await loading.dismiss();
+      await this.loadingService.dismissWithResult(
+        error.message || 'Error al guardar la fotografía en el servidor.',
+        false
+      );
     }
   }
 

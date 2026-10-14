@@ -109,7 +109,6 @@
   }
 }
 
-/* Modal Form Styles */
 .modal-form {
   padding: 20px;
 
@@ -144,12 +143,9 @@
   justify-content: center;
   box-shadow: 0 8px 16px rgba(123, 0, 255, 0.25);
   margin-bottom: 12px;
-  
-  /* ESTOS DOS SON CLAVES PARA QUE NO SE SALGA DEL CÍRCULO */
   overflow: hidden; 
   position: relative;
 
-  /* Estilos para que la imagen cubra todo el espacio sin deformarse */
   img {
     width: 100%;
     height: 100%;
@@ -162,7 +158,6 @@
   }
 }
 
-/* Estilos para el nuevo modal de origen de foto */
 ion-modal.custom-bottom-sheet {
   --height: auto;
   --border-radius: 24px 24px 0 0;
@@ -171,7 +166,7 @@ ion-modal.custom-bottom-sheet {
 
 .photo-source-content {
   padding: 32px 24px;
-  background: #f8f9fa; /* Fondo ligeramente grisáceo similar a la imagen */
+  background: #f8f9fa; 
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -179,8 +174,8 @@ ion-modal.custom-bottom-sheet {
 
 .btn-custom {
   margin: 0;
-  height: 52px; /* Altura robusta como en la imagen */
-  --border-radius: 50px; /* Bordes completamente redondeados */
+  height: 52px;
+  --border-radius: 50px;
   font-weight: 600;
   letter-spacing: 0.5px;
   font-size: 15px;
@@ -192,18 +187,24 @@ ion-modal.custom-bottom-sheet {
 }
 
 .btn-camera {
-  --background: #7b00ff; /* Morado sólido */
+  --background: #7b00ff; 
   --background-activated: #6400d4;
   --color: #ffffff;
-  --box-shadow: 0 8px 20px rgba(123, 0, 255, 0.25); /* Sombra difuminada morada */
+  --box-shadow: 0 8px 20px rgba(123, 0, 255, 0.25); 
 }
 
 .btn-gallery {
-  --border-color: #7b00ff; /* Borde morado */
+  --border-color: #7b00ff; 
   --border-width: 2px;
   --border-style: solid;
-  --background: #ffffff; /* Fondo blanco */
+  --background: #ffffff; 
   --background-activated: rgba(123, 0, 255, 0.1);
-  --color: #7b00ff; /* Texto e icono morado */
+  --color: #7b00ff; 
   --box-shadow: none;
+}
+
+ion-modal.custom-edit-modal {
+  --height: 98vh;
+  --max-height: 900px;
+  --border-radius: 20px 20px 20px 20px;
 }
