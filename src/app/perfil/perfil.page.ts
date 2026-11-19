@@ -19,11 +19,7 @@ import {
   IonModal,
   IonInput,
   IonSpinner,
-  ToastController,
   AlertController,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonPopover,
   IonChip,
   ViewWillEnter,
@@ -57,6 +53,7 @@ import { AuthService } from "../services/auth.service";
 import { PhotoService } from "../services/photo.service";
 import { NotesService } from "../services/notes.service";
 import { LoadingService } from "../services/loading.service";
+import { ToastService } from "../services/toast.service";
 import { Preferences } from "@capacitor/preferences";
 
 @Component({
@@ -81,9 +78,6 @@ import { Preferences } from "@capacitor/preferences";
     IonModal,
     IonInput,
     IonSpinner,
-    IonGrid,
-    IonRow,
-    IonCol,
     IonPopover,
     RouterLink,
     IonChip,
@@ -123,7 +117,7 @@ export class PerfilPage implements OnInit, ViewWillEnter {
     private photoService: PhotoService,
     private notesService: NotesService,
     private router: Router,
-    private toastCtrl: ToastController,
+    private toastService: ToastService,
     private alertCtrl: AlertController,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService,
@@ -235,13 +229,13 @@ closePhotoSourceModal() {
   
 
   async showToast(message: string, color: "success" | "danger" | "warning") {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3500,
-      position: "top",
-      color,
-    });
-    await toast.present();
+    if (color === "success") {
+      await this.toastService.success(message, "top");
+    } else if (color === "danger") {
+      await this.toastService.error(message, "top");
+    } else {
+      await this.toastService.warning(message, "top");
+    }
   }
 
   openEditModal() {
@@ -287,7 +281,7 @@ closePhotoSourceModal() {
   getProfilePhotoUrl(user: any): string | null {
     if (user && user.profile_photo_path) {
       const ip = this.serverConfig?.ip || 'localhost';
-      const port = this.serverConfig?.port || '80';
+      const port = '80';
       // Retorna la ruta completa concatenando tu backend
       return `http://${ip}:${port}/ecos-ionic/${user.profile_photo_path}`;
     }

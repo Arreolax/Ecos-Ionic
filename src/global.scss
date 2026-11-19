@@ -57,3 +57,17 @@ ion-loading.custom-loading {
     }
   }
 }
+
+/* ─── Custom Single Toast (No sobreposición) ─── */
+ion-toast.custom-single-toast {
+  --border-radius: 14px;
+  --box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+
+  &::part(button) {
+    color: currentColor;
+    opacity: 0.85;
+  }
+}
+

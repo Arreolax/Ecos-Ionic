@@ -17,7 +17,6 @@ import {
   ActionSheetController,
   AlertController,
   LoadingController,
-  ToastController,
   IonRefresher,
   IonRefresherContent,
   IonModal,
@@ -45,6 +44,7 @@ import type { UserPhoto, Folder } from "../services/photo.service";
 import { PhotoService } from "../services/photo.service";
 import { AuthService } from "../services/auth.service";
 import { LoadingService } from "../services/loading.service";
+import { ToastService } from "../services/toast.service";
 
 @Component({
   selector: "app-album-fotos",
@@ -76,7 +76,7 @@ export class FolderPhotosPage implements OnInit, ViewWillEnter {
   private actionSheetController = inject(ActionSheetController);
   private alertCtrl = inject(AlertController);
   private loadingCtrl = inject(LoadingController);
-  private toastCtrl = inject(ToastController);
+  private toastService = inject(ToastService);
   private loadingService = inject(LoadingService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -279,12 +279,12 @@ export class FolderPhotosPage implements OnInit, ViewWillEnter {
     message: string,
     color: "success" | "danger" | "warning" = "success",
   ) {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3000,
-      position: "bottom",
-      color,
-    });
-    await toast.present();
+    if (color === "success") {
+      await this.toastService.success(message, "bottom");
+    } else if (color === "danger") {
+      await this.toastService.error(message, "bottom");
+    } else {
+      await this.toastService.warning(message, "bottom");
+    }
   }
 }

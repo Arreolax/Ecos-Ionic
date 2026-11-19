@@ -1,16 +1,14 @@
-import { Injectable } from '@angular/core';
-import { LoadingController, ToastController } from '@ionic/angular';
+import { Injectable, inject } from '@angular/core';
+import { LoadingController } from '@ionic/angular';
+import { ToastService } from './toast.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LoadingService {
   private loading: HTMLIonLoadingElement | null = null;
-
-  constructor(
-    private loadingCtrl: LoadingController,
-    private toastCtrl: ToastController
-  ) {}
+  private loadingCtrl = inject(LoadingController);
+  private toastService = inject(ToastService);
 
   async show(message: string = 'Procesando...'): Promise<void> {
     await this.dismiss();
@@ -35,14 +33,11 @@ export class LoadingService {
   }
 
   async showResult(message: string, success: boolean): Promise<void> {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3500,
-      position: 'top',
-      color: success ? 'success' : 'danger',
-      icon: success ? 'checkmark-circle-outline' : 'close-circle-outline',
-    });
-    await toast.present();
+    if (success) {
+      await this.toastService.success(message, 'top', 3500);
+    } else {
+      await this.toastService.error(message, 'top', 3500);
+    }
   }
 
   async dismissWithResult(message: string, success: boolean): Promise<void> {

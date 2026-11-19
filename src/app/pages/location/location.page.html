@@ -1,0 +1,34 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Geolocalización</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div *ngIf="errorMsg; else showCoords">
+    <ion-alert [message]="errorMsg" header="Error" isOpen="true"></ion-alert>
+  </div>
+
+  <ng-template #showCoords>
+    <p *ngIf="latitude !== null && longitude !== null">
+      <strong>Latitud:</strong> {{ latitude }}<br />
+      <strong>Longitud:</strong> {{ longitude }}
+    </p>
+    <p *ngIf="latitude === null && longitude === null">
+      Obteniendo coordenadas...
+    </p>
+  </ng-template>
+<ion-button expand="full" (click)="takePhoto()">Tomar foto con ubicación</ion-button>
+  <ion-list *ngIf="photos.length > 0">
+    <ion-item *ngFor="let p of photos">
+      <ion-label>
+        <h2>Foto capturada</h2>
+        <p>Lat: {{p.latitude}} | Lng: {{p.longitude}}</p>
+        <p>{{p.timestamp}}</p>
+      </ion-label>
+      <ion-thumbnail slot="start">
+        <img [src]="p.filePath" *ngIf="p.filePath" />
+      </ion-thumbnail>
+    </ion-item>
+  </ion-list>
+</ion-content>

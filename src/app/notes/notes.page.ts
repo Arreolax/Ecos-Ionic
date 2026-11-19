@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { NotesService, Note, Category } from "../services/notes.service";
 import { LoadingService } from "../services/loading.service";
+import { ToastService } from "../services/toast.service";
 import { AuthService } from '../services/auth.service';
 import {
   IonContent,
@@ -35,7 +36,6 @@ import {
   IonSelectOption,
   IonRefresher,
   IonRefresherContent,
-  ToastController,
   AlertController,
 } from "@ionic/angular";
 import { addIcons } from "ionicons";
@@ -96,7 +96,7 @@ import {
   ],
 })
 export class NotesPage implements OnInit {
-  private toastCtrl = inject(ToastController);
+  private toastService = inject(ToastService);
   private alertCtrl = inject(AlertController);
   private notesService = inject(NotesService);
   private cdr = inject(ChangeDetectorRef);
@@ -346,13 +346,15 @@ export class NotesPage implements OnInit {
   }
 
   private async showToast(message: string, color: string) {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 2500,
-      color,
-      position: "top",
-    });
-    await toast.present();
+    if (color === 'success') {
+      await this.toastService.success(message, 'top');
+    } else if (color === 'danger') {
+      await this.toastService.error(message, 'top');
+    } else if (color === 'warning') {
+      await this.toastService.warning(message, 'top');
+    } else {
+      await this.toastService.info(message, 'top');
+    }
   }
 
   async confirmDeleteNote(note: Note, event?: Event) {

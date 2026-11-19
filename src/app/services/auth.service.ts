@@ -39,7 +39,7 @@ export class AuthService {
     if (value) {
       const config = JSON.parse(value);
       const ip = config.ip || "localhost";
-      const port = config.port || "80";
+      const port = "80";
       // Construye la URL uniendo IP y puerto
       return `http://${ip}:${port}/ecos-ionic`;
     }

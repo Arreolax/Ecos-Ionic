@@ -18,11 +18,9 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonLabel,
   IonSelect,
   IonSelectOption,
   LoadingController,
-  ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
@@ -34,12 +32,14 @@ import {
   closeOutline,
   checkmarkCircleOutline,
   imagesOutline,
+  locateOutline,
 } from 'ionicons/icons';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import type { Photo } from '@capacitor/camera';
 import { PhotoService } from '../services/photo.service';
 import type { Folder } from '../services/photo.service';
 import { LoadingService } from '../services/loading.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-camera',
@@ -63,7 +63,6 @@ import { LoadingService } from '../services/loading.service';
     IonCardContent,
     IonCardHeader,
     IonCardTitle,
-    IonLabel,
     IonSelect,
     IonSelectOption,
     RouterLink,
@@ -73,7 +72,7 @@ export class CameraPage {
   private photoService = inject(PhotoService);
   private router = inject(Router);
   private loadingCtrl = inject(LoadingController);
-  private toastCtrl = inject(ToastController);
+  private toastService = inject(ToastService);
   private loadingService = inject(LoadingService);
 
   public capturedPhoto = signal<Photo | null>(null);
@@ -83,6 +82,8 @@ export class CameraPage {
   public description: string = '';
   public selectedFolderId: number | null = 3;
   public folders: Folder[] = [];
+  public latitude: number | null = null;
+  public longitude: number | null = null;
 
   constructor() {
     addIcons({
@@ -94,6 +95,7 @@ export class CameraPage {
       closeOutline,
       checkmarkCircleOutline,
       imagesOutline,
+      locateOutline,
     });
 
     // Cargar las carpetas al inicializar la página
@@ -105,8 +107,22 @@ export class CameraPage {
   }
 
   /**
-   * Abre la cámara del dispositivo para capturar una fotografía.
+   * Captura foto con ubicación usando PhotoService.
    */
+  async captureWithLocation() {
+    try {
+      const result = await this.photoService.capturePhotoWithLocation();
+      const photo = result.photo;
+      this.capturedPhoto.set(photo);
+      this.previewUrl.set(photo.webPath || null);
+      this.latitude = result.latitude;
+      this.longitude = result.longitude;
+    } catch (error: any) {
+      this.presentToast(error.message ?? 'Error al capturar la foto con ubicación.', 'danger');
+    }
+  }
+
+  // Mantener método existente para captura sin ubicación (opcional)
   async openCamera() {
     await this.capture(CameraSource.Camera);
   }
@@ -146,6 +162,8 @@ export class CameraPage {
     this.title = '';
     this.description = '';
     this.selectedFolderId = 3;
+    this.latitude = null;
+    this.longitude = null;
   }
 
   /**
@@ -199,12 +217,12 @@ export class CameraPage {
   }
 
   private async presentToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3000,
-      position: 'bottom',
-      color,
-    });
-    await toast.present();
+    if (color === 'success') {
+      await this.toastService.success(message, 'bottom');
+    } else if (color === 'danger') {
+      await this.toastService.error(message, 'bottom');
+    } else {
+      await this.toastService.warning(message, 'bottom');
+    }
   }
 }

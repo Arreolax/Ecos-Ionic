@@ -2,9 +2,10 @@ import { Component, ElementRef, ViewChild, AfterViewInit, OnInit, ChangeDetector
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonContent, ToastController, IonItem, IonIcon } from '@ionic/angular';
+import { IonContent } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
 import { LoadingService } from '../services/loading.service';
+import { ToastService } from '../services/toast.service';
 import { Preferences } from '@capacitor/preferences';
 
 declare const paper: any;
@@ -13,7 +14,7 @@ declare const paper: any;
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
-  imports: [IonContent, CommonModule, FormsModule, IonItem, IonIcon],
+  imports: [IonContent, CommonModule, FormsModule,],
 })
 export class LoginPage implements OnInit, AfterViewInit {
   @ViewChild('canvasEl', { static: false }) canvasElement!: ElementRef<HTMLCanvasElement>;
@@ -54,7 +55,7 @@ export class LoginPage implements OnInit, AfterViewInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private toastCtrl: ToastController,
+    private toastService: ToastService,
     private cdr: ChangeDetectorRef,
     private loadingService: LoadingService
   ) {}
@@ -72,15 +73,15 @@ export class LoginPage implements OnInit, AfterViewInit {
     this.cdr.detectChanges();
   }
 
-  // Notificaciones Toast de Ionic
+  // Notificaciones Toast (sin sobreposición)
   async showToast(message: string, color: 'success' | 'danger' | 'warning') {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3500,
-      position: 'top',
-      color,
-    });
-    await toast.present();
+    if (color === 'success') {
+      await this.toastService.success(message, 'top');
+    } else if (color === 'danger') {
+      await this.toastService.error(message, 'top');
+    } else {
+      await this.toastService.warning(message, 'top');
+    }
   }
 
   // Enviar formulario de Login a través de Axios

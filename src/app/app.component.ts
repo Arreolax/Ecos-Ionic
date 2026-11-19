@@ -4,6 +4,7 @@ import { IonApp, IonRouterOutlet, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { cloudOfflineOutline } from 'ionicons/icons';
 import { NetworkService } from './services/network.service';
+import { SyncService } from './services/sync.service';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +14,7 @@ import { NetworkService } from './services/network.service';
 })
 export class AppComponent {
   public networkService = inject(NetworkService);
+  private syncService = inject(SyncService);
 
   constructor() {
     addIcons({ cloudOfflineOutline });

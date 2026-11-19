@@ -37,6 +37,11 @@
             Abrir Cámara
           </ion-button>
 
+          <ion-button (click)="captureWithLocation()" expand="block" shape="round" color="tertiary" class="main-btn">
+            <ion-icon slot="start" name="locate-outline"></ion-icon>
+            Foto con Ubicación
+          </ion-button>
+
           <ion-button (click)="openGallery()" expand="block" shape="round" fill="outline" color="primary" class="secondary-btn">
             <ion-icon slot="start" name="image-outline"></ion-icon>
             Elegir de la Galería
@@ -52,6 +57,17 @@
             <ion-icon slot="icon-only" name="close-outline"></ion-icon>
           </ion-button>
         </div>
+
+        <!-- Mostrar coordenadas si se capturó con ubicación -->
+        @if (latitude !== null && longitude !== null) {
+          <ion-card class="location-card">
+            <ion-card-content>
+              <ion-icon name="locate-outline" color="tertiary"></ion-icon>
+              <strong> Ubicación registrada</strong>
+              <p>Lat: {{ latitude }} | Lng: {{ longitude }}</p>
+            </ion-card-content>
+          </ion-card>
+        }
 
         <ion-card class="form-card">
           <ion-card-header>
